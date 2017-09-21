@@ -31,7 +31,6 @@ namespace NeoSmart.Utils
             switch (encoded.Length % 4)
             {
                 case 2:
-                    chars.Add('=');
                     chars.AddRange(TwoPads);
                     break;
                 case 3:
