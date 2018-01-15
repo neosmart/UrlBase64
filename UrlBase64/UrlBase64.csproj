@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard1.3;net20;net40</TargetFrameworks>
+    <TargetFrameworks>netstandard1.0;net20;net40</TargetFrameworks>
     <RootNamespace>NeoSmart.Utils</RootNamespace>
     <Authors>NeoSmart Technologies, Mahmoud Al-Qudsi</Authors>
     <Company>NeoSmart Technologies</Company>
@@ -12,15 +12,9 @@
     <RepositoryUrl>https://github.com/neosmart/UrlBase64/</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>url, web, base64</PackageTags>
-    <PackageReleaseNotes>0.1.1:
- * Fixed an encoded error with inputs of a certain length.
-
-0.1:
- * Initial release</PackageReleaseNotes>
-    <AssemblyVersion>0.1.1.0</AssemblyVersion>
-    <FileVersion>0.1.1.0</FileVersion>
+    <PackageReleaseNotes>support netstandard 1.0</PackageReleaseNotes>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.1.1</Version>
+    <Version>0.1.2</Version>
   </PropertyGroup>
 
 </Project>
