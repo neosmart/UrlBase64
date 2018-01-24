@@ -21,6 +21,7 @@
     <FileVersion>0.1.1.0</FileVersion>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Version>0.1.1</Version>
+    <AssemblyName>NeoSmart.Utils.UrlBase64</AssemblyName>
   </PropertyGroup>
 
 </Project>
