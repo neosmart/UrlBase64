@@ -7,10 +7,10 @@ namespace NeoSmart.Utils
     {
         private static readonly char[] TwoPads = { '=', '=' };
 
-        public static string Encode(byte[] bytes, PaddingPolicy padding = PaddingPolicy.Trim)
+        public static string Encode(byte[] bytes, PaddingPolicy padding = PaddingPolicy.Discard)
         {
             var encoded = Convert.ToBase64String(bytes).Replace('+', '-').Replace('/', '_');
-            if (padding == PaddingPolicy.Trim)
+            if (padding == PaddingPolicy.Discard)
             {
                 encoded = encoded.TrimEnd('=');
             }
