@@ -3,12 +3,15 @@ using System.Linq;
 using System.Text;
 using NeoSmart.Utils;
 using System;
+using System.Collections.Generic;
 
 namespace Tests
 {
     [TestClass]
     public class UnitTest1
     {
+        public const PaddingPolicy DefaultPaddingPolicy = PaddingPolicy.Discard;
+
         [TestMethod]
         public void BasicTest()
         {
@@ -41,6 +44,24 @@ namespace Tests
                 {
                     throw new Exception($"Decoded value mismatch for input of length {i}!", ex);
                 }
+            }
+        }
+
+        [TestMethod]
+        public void PaddingPolicyTest()
+        {
+            var tests = new(string input, string output)[]
+            {
+                ("1", "MQ=="),
+                ("11", "MTE="),
+                ("111", "MTEx")
+            };
+
+            foreach (var test in tests)
+            {
+                Assert.AreEqual(test.output, UrlBase64.Encode(Encoding.UTF8.GetBytes(test.input), PaddingPolicy.Preserve), "Did not find expected padding in encoded output!");
+                Assert.AreEqual(test.output.TrimEnd('='), UrlBase64.Encode(Encoding.UTF8.GetBytes(test.input)), "Found unexpected padding in encoded output!");
+                Assert.AreEqual(UrlBase64.Encode(Encoding.UTF8.GetBytes(test.input)), UrlBase64.Encode(Encoding.UTF8.GetBytes(test.input), DefaultPaddingPolicy), "Default padding policy behavior does not match expected!");
             }
         }
     }
