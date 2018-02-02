@@ -29,6 +29,29 @@ void UsageSample()
 }
 ```
 
+### Padding Options (Encoding)
+
+`UrlBase64` supports two different padding modes (internally: `PaddingPolicy`) for generating base64 content:
+
+```csharp
+public enum PaddingPolicy
+{
+	Discard,
+	Preserve,
+}
+```
+
+The `PaddingPolicy` option controls the behavior of `UrlBase64` when encoding content that does not fall on a 4-character (output) boundary. Per [RFC 4648](https://tools.ietf.org/html/rfc4648), base64 specifies that an "optional depending on the circumstances" trailing `=` sign is used to pad the output to be a multiple of 4 characters long. `UrlBase64` supports both padded and unpadded output via an optional `PaddingPolicy` parameter to `UrlBase64.Encode` controlling this behavior. The default behavior at this time is to omit the trailing padding given that it a) can (and usually is) be inferred automatically when dropped from the encoded output, and b) utilizes a symbol that requires encoding when used in URLs.
+
+```csharp
+var bytes = Encoding.UTF8.GetBytes("Mary had a little lamb");
+Console.WriteLine(bytes, UrlBase64.Encode(bytes, PaddingPolicy.Discard));
+Console.WriteLine(bytes, UrlBase64.Encode(bytes, PaddingPolicy.Preserve));
+```
+
+>TWFyeSBoYWQgYSBsaXR0bGUgbGFtYg
+>TWFyeSBoYWQgYSBsaXR0bGUgbGFtYg==
+
 ## License and Copyright
 
-`UrlBase64` is developed by Mahmoud Al-Qudsi of NeoSmart Technologies. `UrlBase64` is released under the terms of the MIT Public License.
+`UrlBase64` is developed by Mahmoud Al-Qudsi of NeoSmart Technologies. `UrlBase64` is released under the terms of the MIT Public License. Copyright NeoSmart Technologies 2017-2018.
