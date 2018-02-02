@@ -6,21 +6,26 @@
     <Authors>NeoSmart Technologies, Mahmoud Al-Qudsi</Authors>
     <Company>NeoSmart Technologies</Company>
     <Description>A standards-compliant implementation of url-safe base64 encode/decode for .NET projects.</Description>
-    <Copyright>Copyright NeoSmart Technologies 2017</Copyright>
+    <Copyright>Copyright NeoSmart Technologies 2017-2018</Copyright>
     <PackageLicenseUrl>https://cdn.rawgit.com/neosmart/UrlBase64/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/neosmart/UrlBase64/</PackageProjectUrl>
     <RepositoryUrl>https://github.com/neosmart/UrlBase64/</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageTags>url, web, base64</PackageTags>
+    <PackageTags>url, web, base64, encoding, binary</PackageTags>
     <PackageReleaseNotes>0.1.2:
-* Support NET Standard 1.0
-      
+
+    * New PaddingPolicy option to specify output padding
+    * Lower .NET Standard requirement to 1.0
+
+
 0.1.1:
-* Fixed an encoded error with inputs of a certain length.
+
+    * Fixed an encoded error with inputs of a certain length.
+
 
 0.1:
-* Initial release
-    </PackageReleaseNotes>
+
+    * Initial release</PackageReleaseNotes>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Version>0.1.2</Version>
   </PropertyGroup>
