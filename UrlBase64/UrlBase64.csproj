@@ -28,6 +28,7 @@
     * Initial release</PackageReleaseNotes>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Version>0.1.2</Version>
+    <PackageIconUrl>https://cdn.rawgit.com/neosmart/UrlBase64/373067d3/Icon/UrlBase64.png</PackageIconUrl>
   </PropertyGroup>
 
 </Project>
