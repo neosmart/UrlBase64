@@ -4,6 +4,7 @@ using System.Text;
 using NeoSmart.Utils;
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace Tests
 {
@@ -23,9 +24,49 @@ namespace Tests
         }
 
         [TestMethod]
+        public void EncodeToSpan()
+        {
+            var foo = Encoding.UTF8.GetBytes("foo");
+            var encoded1 = UrlBase64.Encode(foo.AsSpan());
+            var encoded2 = UrlBase64.Encode(foo);
+            var encoding = new UTF8Encoding(false);
+            CollectionAssert.AreEqual(encoding.GetBytes(encoded2), encoded1.ToArray());
+        }
+
+        [TestMethod]
+        public void DecodeFromSpan()
+        {
+            var encoding = new UTF8Encoding(false);
+            var foo = encoding.GetBytes("foo");
+            var encoded = UrlBase64.Encode(foo);
+            var decoded = UrlBase64.Decode(encoded.AsSpan());
+            CollectionAssert.AreEqual(foo, decoded.ToArray());
+        }
+
+        [TestMethod]
+        public void DecodeFromSpanPadded1()
+        {
+            var encoding = new UTF8Encoding(false);
+            var foo = encoding.GetBytes("foo11");
+            var encoded = UrlBase64.Encode(foo, PaddingPolicy.Preserve);
+            var decoded = UrlBase64.Decode(encoded.AsSpan());
+            CollectionAssert.AreEqual(foo, decoded.ToArray());
+        }
+
+        [TestMethod]
+        public void DecodeFromSpanPadded2()
+        {
+            var encoding = new UTF8Encoding(false);
+            var foo = encoding.GetBytes("foo1");
+            var encoded = UrlBase64.Encode(foo, PaddingPolicy.Preserve);
+            var decoded = UrlBase64.Decode(encoded.AsSpan());
+            CollectionAssert.AreEqual(foo, decoded.ToArray());
+        }
+
+        [TestMethod]
         public void VariableLengthTest()
         {
-            //use a fixed seed so we can have deterministic results
+            // Use a fixed seed so we can have deterministic results
             var rng = new Random(0);
 
             for (int i = 0; i < 256; ++i)

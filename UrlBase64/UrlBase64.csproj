@@ -1,18 +1,22 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard1.0;net20;net40</TargetFrameworks>
+    <TargetFrameworks>netstandard1.0;net20;net40;netstandard2.0</TargetFrameworks>
     <RootNamespace>NeoSmart.Utils</RootNamespace>
     <Authors>NeoSmart Technologies, Mahmoud Al-Qudsi</Authors>
     <Company>NeoSmart Technologies</Company>
     <Description>A standards-compliant implementation of url-safe base64 encode/decode for .NET projects.</Description>
-    <Copyright>Copyright NeoSmart Technologies 2017-2018</Copyright>
-    <PackageLicenseUrl>https://cdn.rawgit.com/neosmart/UrlBase64/master/LICENSE</PackageLicenseUrl>
+    <Copyright>Copyright NeoSmart Technologies 2017-2019</Copyright>
+    <PackageLicenseUrl></PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/neosmart/UrlBase64/</PackageProjectUrl>
     <RepositoryUrl>https://github.com/neosmart/UrlBase64/</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>url, web, base64, encoding, binary</PackageTags>
-    <PackageReleaseNotes>0.1.2:
+    <PackageReleaseNotes>
+      <![CDATA[
+1.0:
+    * Support for Span<T> and co.
+0.1.2:
 
     * New PaddingPolicy option to specify output padding
     * Lower .NET Standard requirement to 1.0
@@ -25,10 +29,38 @@
 
 0.1:
 
-    * Initial release</PackageReleaseNotes>
+    * Initial release
+    ]]>
+    </PackageReleaseNotes>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.1.2</Version>
-    <PackageIconUrl>https://cdn.rawgit.com/neosmart/UrlBase64/373067d3/Icon/UrlBase64.png</PackageIconUrl>
+    <Version>1.0</Version>
+    <PackageIconUrl></PackageIconUrl>
+    <PackageIcon>UrlBase64.png</PackageIcon>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\Icon\UrlBase64.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <DefineConstants>$(DefineConstants);WITH_SPAN</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup Condition="$(DefineConstants.Contains('WITH_SPAN'))">
+    <PackageReference Include="System.Memory">
+      <Version>4.5.3</Version>
+    </PackageReference>
+    <PackageReference Include="System.Buffers">
+      <Version>4.5.0</Version>
+    </PackageReference>
+  </ItemGroup>
+
+  <PropertyGroup Condition="$(DefineConstants.Contains('WITH_SPAN'))">
+    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
 
 </Project>
