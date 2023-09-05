@@ -5,8 +5,8 @@
     <RootNamespace>NeoSmart.Utils</RootNamespace>
     <Authors>NeoSmart Technologies, Mahmoud Al-Qudsi</Authors>
     <Company>NeoSmart Technologies</Company>
-    <Description>A standards-compliant implementation of url-safe base64 encode/decode for .NET projects.</Description>
-    <Copyright>Copyright NeoSmart Technologies 2017-2019</Copyright>
+    <Description>A standards-compliant implementation of url-safe base64 encode/decode for .NET projects with Span optimizations.</Description>
+    <Copyright>Copyright NeoSmart Technologies 2017-2023</Copyright>
     <PackageLicenseUrl></PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/neosmart/UrlBase64/</PackageProjectUrl>
     <RepositoryUrl>https://github.com/neosmart/UrlBase64/</RepositoryUrl>
@@ -38,12 +38,19 @@
     <PackageIconUrl></PackageIconUrl>
     <PackageIcon>UrlBase64.png</PackageIcon>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
-  <ItemGroup>
+    <ItemGroup>
     <None Include="..\Icon\UrlBase64.png">
       <Pack>True</Pack>
-      <PackagePath></PackagePath>
+      <PackagePath>/</PackagePath>
+    </None>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>/</PackagePath>
     </None>
   </ItemGroup>
 
