@@ -5,6 +5,7 @@ using NeoSmart.Utils;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Buffers.Text;
 
 namespace Tests
 {
@@ -49,6 +50,7 @@ namespace Tests
             var encoding = new UTF8Encoding(false);
             var foo = encoding.GetBytes("foo11");
             var encoded = UrlBase64.Encode(foo, PaddingPolicy.Preserve);
+            Assert.AreEqual(Convert.ToBase64String(foo, Base64FormattingOptions.None).Replace('+', '-').Replace('/', '_'), encoded);
             var decoded = UrlBase64.Decode(encoded.AsSpan());
             CollectionAssert.AreEqual(foo, decoded.ToArray());
         }
@@ -59,7 +61,19 @@ namespace Tests
             var encoding = new UTF8Encoding(false);
             var foo = encoding.GetBytes("foo1");
             var encoded = UrlBase64.Encode(foo, PaddingPolicy.Preserve);
+            Assert.AreEqual(Convert.ToBase64String(foo, Base64FormattingOptions.None).Replace('+', '-').Replace('/', '_'), encoded);
             var decoded = UrlBase64.Decode(encoded.AsSpan());
+            CollectionAssert.AreEqual(foo, decoded.ToArray());
+        }
+
+        [TestMethod]
+        public void DecodeFromSpanPadded1InsteadOf2()
+        {
+            var encoding = new UTF8Encoding(false);
+            var foo = encoding.GetBytes("foo1");
+            var encoded = UrlBase64.Encode(foo, PaddingPolicy.Preserve);
+            Assert.AreEqual(Convert.ToBase64String(foo, Base64FormattingOptions.None).Replace('+', '-').Replace('/', '_'), encoded);
+            var decoded = UrlBase64.Decode(encoded.AsSpan(0, encoded.Length - 1));
             CollectionAssert.AreEqual(foo, decoded.ToArray());
         }
 
@@ -76,10 +90,17 @@ namespace Tests
 
                 try
                 {
-                    var encoded = UrlBase64.Encode(array);
+                    var encoded = UrlBase64.Encode(array, PaddingPolicy.Discard);
+                    Assert.AreEqual(Convert.ToBase64String(array, Base64FormattingOptions.None).Replace('+', '-').Replace('/', '_').TrimEnd('='), encoded);
                     var decoded = UrlBase64.Decode(encoded);
 
-                    Assert.IsTrue(array.SequenceEqual(decoded), $"Decoded value mismatch for input of length {i}!");
+                    CollectionAssert.AreEqual(array, decoded, $"Decoded value mismatch for input of length {i}! ");
+
+                    encoded = UrlBase64.Encode(array, PaddingPolicy.Preserve);
+                    Assert.AreEqual(Convert.ToBase64String(array, Base64FormattingOptions.None).Replace('+', '-').Replace('/', '_'), encoded);
+                    decoded = UrlBase64.Decode(encoded);
+
+                    CollectionAssert.AreEqual(array, decoded, $"Decoded value mismatch for input of length {i}! ");
                 }
                 catch (FormatException ex)
                 {

@@ -11,6 +11,7 @@
     <PackageProjectUrl>https://github.com/neosmart/UrlBase64/</PackageProjectUrl>
     <RepositoryUrl>https://github.com/neosmart/UrlBase64/</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PackageTags>url, web, base64, encoding, binary</PackageTags>
     <PackageReleaseNotes>
       <![CDATA[
@@ -60,7 +61,7 @@
   </ItemGroup>
 
   <PropertyGroup Condition="$(DefineConstants.Contains('WITH_SPAN'))">
-    <LangVersion>8.0</LangVersion>
+    <LangVersion>10.0</LangVersion>
   </PropertyGroup>
 
 </Project>
