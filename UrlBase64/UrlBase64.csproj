@@ -3,14 +3,15 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard1.0;net20;net40;netstandard2.0</TargetFrameworks>
     <RootNamespace>NeoSmart.Utils</RootNamespace>
-    <Authors>NeoSmart Technologies, Mahmoud Al-Qudsi</Authors>
+    <Authors>Mahmoud Al-Qudsi, neosmart</Authors>
     <Company>NeoSmart Technologies</Company>
     <Description>A standards-compliant implementation of url-safe base64 encode/decode for .NET projects with Span optimizations.</Description>
     <Copyright>Copyright NeoSmart Technologies 2017-2023</Copyright>
-    <PackageLicenseUrl></PackageLicenseUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/neosmart/UrlBase64/</PackageProjectUrl>
     <RepositoryUrl>https://github.com/neosmart/UrlBase64/</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+    <PackageId>UrlBase64</PackageId>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PackageTags>url, web, base64, encoding, binary</PackageTags>
     <PackageReleaseNotes>
@@ -34,7 +35,7 @@
     ]]>
     </PackageReleaseNotes>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0</Version>
+    <Version>1.0.0</Version>
     <PackageIconUrl></PackageIconUrl>
     <PackageIcon>UrlBase64.png</PackageIcon>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
