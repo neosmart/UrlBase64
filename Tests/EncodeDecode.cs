@@ -3,9 +3,6 @@ using System.Linq;
 using System.Text;
 using NeoSmart.Utils;
 using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Buffers.Text;
 
 namespace Tests
 {
@@ -28,7 +25,7 @@ namespace Tests
         public void EncodeToSpan()
         {
             var foo = Encoding.UTF8.GetBytes("foo");
-            var encoded1 = UrlBase64.Encode(foo.AsSpan());
+            var encoded1 = UrlBase64.EncodeUtf8(foo.AsSpan());
             var encoded2 = UrlBase64.Encode(foo);
             var encoding = new UTF8Encoding(false);
             CollectionAssert.AreEqual(encoding.GetBytes(encoded2), encoded1.ToArray());

@@ -60,7 +60,7 @@ namespace NeoSmart.Utils
         {
             // Every 24 bits become 32 bits, including the trailing padding
 #if WITH_SPAN
-            return Encoding.ASCII.GetString(Encode(bytes.AsSpan(), padding));
+            return Encode(bytes.AsSpan(), padding);
 #else
             var encoded = Convert.ToBase64String(bytes).Replace('+', '-').Replace('/', '_');
             if (padding == PaddingPolicy.Discard)
@@ -108,7 +108,12 @@ namespace NeoSmart.Utils
         }
 
 #if WITH_SPAN
-        public static byte[] Encode(ReadOnlySpan<byte> input, PaddingPolicy padding = DefaultPaddingPolicy)
+        public static string Encode(ReadOnlySpan<byte> input, PaddingPolicy padding = DefaultPaddingPolicy)
+        {
+            return Encoding.ASCII.GetString(EncodeUtf8(input, padding));
+        }
+
+        public static byte[] EncodeUtf8(ReadOnlySpan<byte> input, PaddingPolicy padding = DefaultPaddingPolicy)
         {
             // Every three input bytes become 4 output bytes, and there are possibly two bytes of padding
             int length = (input.Length + 2) / 3 * 4;
