@@ -35,7 +35,7 @@
     ]]>
     </PackageReleaseNotes>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <PackageIconUrl></PackageIconUrl>
     <PackageIcon>UrlBase64.png</PackageIcon>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
