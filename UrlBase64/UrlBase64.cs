@@ -152,63 +152,63 @@ namespace NeoSmart.Utils
 
         public static byte[] Decode(ReadOnlySpan<char> input)
         {
-            unsafe
+            // Simplify our calculations by always using unpadded UrlBase64 input:
+            input = input.TrimEnd('=');
+            int unpaddedLength = input.Length;
+            int paddingLength = ((4 - input.Length & 0b11) & 0b11);
+            Debug.Assert(paddingLength == (4 - input.Length % 4) % 4);
+            // Padding length *could* be 3 here, but that's actually an invalid input we'll throw on below
+            int paddedLength = unpaddedLength + paddingLength;
+            int maxDecodedLength = ((paddedLength + 4 - 1) >> 2) * 3;
+            Debug.Assert(maxDecodedLength == ((int)Math.Ceiling(paddedLength / 4.0)) * 3);
+            Debug.Assert(Base64.GetMaxDecodedFromUtf8Length(paddedLength) == maxDecodedLength);
+            int decodedLength = maxDecodedLength - paddingLength;
+            var decoded = new byte[decodedLength];
+            // Unrolled read of 4 characters
+            int i = 0, j = 0;
+            for (; i + 4 <= input.Length; i += 4)
             {
-                // Every four letters represent three bytes, but there could be two bytes of padding missing
-                // int decodedLength = ((int)Math.Ceiling(input.Length / 4.0)) * 3;
-                int decodedLength = ((input.Length + 4 - 1) >> 2) * 3;
-                Debug.Assert(decodedLength == ((int)Math.Ceiling(input.Length / 4.0)) * 3);
-                // Debug.Assert(Base64.GetMaxDecodedFromUtf8Length(input.Length) == decodedLength);
-                fixed (byte* decodedPtr = decodedLength <= 1024 ? stackalloc byte[decodedLength] : new byte[decodedLength])
-                {
-                    // Unrolled read of 4 characters
-                    int i = 0, j = 0;
-                    for (; i + 4 <= input.Length; i += 4)
-                    {
-                        // Every eight bits are actually six bits
-                        uint bytes =
-                            (((uint)FromBase64[input[i]]) << 18) |
-                            (((uint)FromBase64[input[i + 1]]) << 12) |
-                            (((uint)FromBase64[input[i + 2]]) << 6) |
-                            (FromBase64[input[i + 3]]);
-                        decodedPtr[j++] = (byte)(bytes >> 16);
-                        decodedPtr[j++] = (byte)(bytes >> 8);
-                        decodedPtr[j++] = (byte)(bytes);
-                        Debug.Assert(j <= decodedLength);
-                    }
-
-                    // Handle left-over bits in case of missing input padding
-                    int manualPaddingBytes = input.Length > 1 && input[input.Length - 2] == '=' ? 2
-                        : input.Length > 0 && input[input.Length - 1] == '=' ? 1 : 0;
-                    if (i < input.Length)
-                    {
-                        var (paddingBytes, bytes) = (input.Length - i) switch
-                        {
-                            3 => (1, (((uint)FromBase64[input[i]]) << 18) | (((uint)FromBase64[input[i + 1]]) << 12) | (((uint)FromBase64[input[i + 2]]) << 6) | 0xFF),
-                            2 => (2, (((uint)FromBase64[input[i]]) << 18) | (((uint)FromBase64[input[i + 1]]) << 12) | (((uint)0xFF) << 6) | 0xFF),
-                            _ => throw new InvalidOperationException($"Invalid input provided. {nameof(input)}.Length % 4 can never be less than 2, even without padding."),
-                        };
-                        manualPaddingBytes += paddingBytes;
-                        decodedPtr[j++] = (byte)(bytes >> 16);
-                        decodedPtr[j++] = (byte)(bytes >> 8);
-                        decodedPtr[j++] = (byte)(bytes >> 0);
-                        Debug.Assert(j <= decodedLength);
-                    }
-
-                    var decodedSpan = new Span<byte>(decodedPtr, decodedLength);
-                    // Count trailing padding, if any. Maximum possible padding is two = signs.
-                    if (manualPaddingBytes == 2)
-                    {
-                        return decodedSpan.Slice(0, decodedLength - 2).ToArray();
-                    }
-                    else if (manualPaddingBytes == 1)
-                    {
-                        return decodedSpan.Slice(0, decodedLength - 1).ToArray();
-                    }
-
-                    return decodedSpan.ToArray();
-                }
+                // Every eight bits are actually six bits
+                uint bytes =
+                    (((uint)FromBase64[input[i]]) << 18) |
+                    (((uint)FromBase64[input[i + 1]]) << 12) |
+                    (((uint)FromBase64[input[i + 2]]) << 6) |
+                    (FromBase64[input[i + 3]]);
+                decoded[j++] = (byte)(bytes >> 16);
+                decoded[j++] = (byte)(bytes >> 8);
+                decoded[j++] = (byte)(bytes);
+                Debug.Assert(j <= decodedLength);
             }
+
+            // Handle left-over bits in case of input that should have had padding
+            if (i < input.Length)
+            {
+                var bytes = (input.Length - i) switch
+                {
+                    3 => (((uint)FromBase64[input[i]]) << 18) | (((uint)FromBase64[input[i + 1]]) << 12) | (((uint)FromBase64[input[i + 2]]) << 6) | 0xFF,
+                    2 => (((uint)FromBase64[input[i]]) << 18) | (((uint)FromBase64[input[i + 1]]) << 12) | (((uint)0xFF) << 6) | 0xFF,
+                    _ => throw new InvalidOperationException($"Invalid input provided. {nameof(input)}.Length % 4 can never be less than 2, even without padding."),
+                };
+
+                if (paddingLength == 2)
+                {
+                    decoded[j++] = (byte)(bytes >> 16);
+                }
+                else if (paddingLength == 1)
+                {
+                    decoded[j++] = (byte)(bytes >> 16);
+                    decoded[j++] = (byte)(bytes >> 8);
+                }
+                else
+                {
+                    decoded[j++] = (byte)(bytes >> 16);
+                    decoded[j++] = (byte)(bytes >> 8);
+                    decoded[j++] = (byte)(bytes >> 0);
+                }
+                Debug.Assert(j <= decodedLength);
+            }
+
+            return decoded;
         }
 #endif
     }
