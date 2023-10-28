@@ -19,13 +19,13 @@ using NeoSmart.Utils;
 
 void UsageSample()
 {
-	var foo = Encoding.UTF8.GetBytes("foo");
-	var encoded = UrlBase64.Encode(foo);
-	var decoded = UrlBase64.Decode(encoded);
+    var foo = Encoding.UTF8.GetBytes("foo");
+    var encoded = UrlBase64.Encode(foo);
+    var decoded = UrlBase64.Decode(encoded);
 
-	var bar = Encoding.UTF8.GetString(decoded);
+    var bar = Encoding.UTF8.GetString(decoded);
 
-	Assert.AreEqual("foo", bar);
+    Assert.AreEqual("foo", bar);
 }
 ```
 
@@ -45,8 +45,8 @@ The `UrlBase64` library comes with several variants of the `Encode()` and `Decod
 ```csharp
 public enum PaddingPolicy
 {
-	Discard,
-	Preserve,
+    Discard,
+    Preserve,
 }
 ```
 
