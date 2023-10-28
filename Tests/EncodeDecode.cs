@@ -110,7 +110,7 @@ namespace Tests
 
         private static byte[] SystemEncodeUtf8(byte[] input)
         {
-            var systemEncoded = new byte[Base64.GetMaxEncodedToUtf8Length(input.Length)];
+            var systemEncoded = new byte[UrlBase64.GetMaxEncodedLength(input.Length)];
             var systemResult = Base64.EncodeToUtf8(input, systemEncoded, out var bytesConsumed, out var bytesWritten);
             Assert.AreEqual(OperationStatus.Done, systemResult);
             Assert.AreEqual(input.Length, bytesConsumed);

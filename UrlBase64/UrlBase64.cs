@@ -132,6 +132,7 @@ namespace NeoSmart.Utils
         /// <param name="padding">The padding policy, which dictates whether trailing <c>=</c> bytes are
         /// appended to the output, defaulting to <see cref="PaddingPolicy.Discard"/> (i.e. not appended).</param>
         /// <returns>An ASCII (UTF8-compatible) string being the URL-safe base64 representation of the provided <paramref name="input"/>.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string Encode(ReadOnlySpan<byte> input, PaddingPolicy padding = DefaultPaddingPolicy)
         {
             return Encoding.ASCII.GetString(EncodeUtf8(input, padding));
@@ -145,6 +146,7 @@ namespace NeoSmart.Utils
         /// <param name="inputLength">The length of the unencoded binary input</param>
         /// <returns>The maximum length of the base64 equivalent of input of the provided length</returns>
         /// <exception cref="ArgumentOutOfRangeException">The provided <paramref name="inputLength"/> exceeds the max supported size</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int GetMaxEncodedLength(int inputLength)
         {
             long maxLength = (inputLength + 2) / 3 * 4;
@@ -156,6 +158,7 @@ namespace NeoSmart.Utils
             return (int)maxLength;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static int GetEncodedLength(int inputLength, PaddingPolicy padding)
         {
             int paddingLength = (3 - (inputLength % 3)) % 3;
@@ -174,6 +177,7 @@ namespace NeoSmart.Utils
         /// bytes will be appended to the output in some cases.</param>
         /// <returns>A <see cref="byte[]"/> containing the base64-encoded result
         /// <exception cref="ArgumentOutOfRangeException">The <paramref name="input"/> length exceeds the max supported size</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] EncodeUtf8(ReadOnlySpan<byte> input, PaddingPolicy padding = DefaultPaddingPolicy)
         {
             // Every three input bytes become 4 output bytes, and there are possibly two bytes of padding
@@ -199,6 +203,7 @@ namespace NeoSmart.Utils
         /// the provided <paramref name="buffer"/>.</returns>
         /// <exception cref="ArgumentException">The provided buffer is too small for the encoded result.</exception>
         /// <exception cref="ArgumentOutOfRangeException">The <paramref name="input"/> length exceeds the max supported size</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Span<byte> Encode(ReadOnlySpan<byte> input, Span<byte> buffer, PaddingPolicy padding = DefaultPaddingPolicy)
         {
             // Every three input bytes become 4 output bytes, and there are possibly two bytes of padding
@@ -278,6 +283,25 @@ namespace NeoSmart.Utils
             Debug.Assert(j == base64.Length);
         }
 
+        /// <summary>
+        /// Returns the maximum length of the decoded version of a url-safe base64-encoded input of length
+        /// <paramref name="encodedLength"/>. This can be used to correctly size a buffer for use with
+        /// <see cref="Decode(ReadOnlySpan{byte}, Span{byte})"/>.
+        /// </summary>
+        /// <param name="encodedLength">The length of the base64-encoded input</param>
+        /// <returns>The maximum length of the decoded binary equivalent of input of the provided length</returns>
+        /// <exception cref="ArgumentOutOfRangeException">The provided <paramref name="encodedLength"/> was invalid.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int GetMaxDecodedLength(int encodedLength)
+        {
+            if (encodedLength < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(encodedLength), "Invalid encoded input length!");
+            }
+            return (encodedLength >> 2) * 3;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static (int DecodedLength, int PaddingLength) CalculateDecodeLength(int trimmedInputLength)
         {
             int unpaddedLength = trimmedInputLength;
@@ -297,6 +321,7 @@ namespace NeoSmart.Utils
         /// </summary>
         /// <param name="input">The input to be decoded</param>
         /// <returns>A newly allocated array containing the decoded binary result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] Decode(ReadOnlySpan<char> input)
         {
             // Simplify our calculations by always using unpadded UrlBase64 input:
@@ -313,6 +338,7 @@ namespace NeoSmart.Utils
         /// </summary>
         /// <param name="input">The input to be decoded</param>
         /// <returns>A newly allocated array containing the decoded binary result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] Decode(ReadOnlySpan<byte> input)
         {
             // Simplify our calculations by always using unpadded UrlBase64 input:
@@ -334,6 +360,7 @@ namespace NeoSmart.Utils
         /// <returns></returns>
         /// <exception cref="ArgumentOutOfRangeException">The provided <paramref name="buffer"/> was
         /// not large enough to contain the result.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Span<byte> Decode(ReadOnlySpan<char> input, Span<byte> buffer)
         {
             // Simplify our calculations by always using unpadded UrlBase64 input:
@@ -357,6 +384,7 @@ namespace NeoSmart.Utils
         /// <returns></returns>
         /// <exception cref="ArgumentOutOfRangeException">The provided <paramref name="buffer"/> was
         /// not large enough to contain the result.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Span<byte> Decode(ReadOnlySpan<byte> input, Span<byte> buffer)
         {
             // Simplify our calculations by always using unpadded UrlBase64 input:
@@ -493,6 +521,7 @@ namespace NeoSmart.Utils
             return decoded;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static ReadOnlySpan<byte> TrimEnd(this ReadOnlySpan<byte> span, char trim)
         {
             int i = span.Length - 1;
