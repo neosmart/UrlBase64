@@ -71,6 +71,19 @@ namespace NeoSmart.Utils
         {
         }
 
+        /// <summary>
+        /// Encodes a binary <paramref name="input"/> to a URL-safe base64 representation, with a configurable
+        /// <see cref="PaddingPolicy"/>. <br/>
+        /// Use one of the other <code>Encode()</code> overloads if you'll ultimately be using the result
+        /// as binary or UTF-8 to save on allocations.
+        /// </summary>
+        /// <param name="input">The raw, unencoded binary input to transform to base64</param>
+        /// <param name="padding">The padding policy, which dictates whether trailing <c>=</c> bytes are
+        /// appended to the output, defaulting to <see cref="PaddingPolicy.Discard"/> (i.e. not appended).</param>
+        /// <returns>An ASCII (UTF8-compatible) string being the URL-safe base64 representation of the provided <paramref name="input"/>.</returns>
+#if WITH_SPAN
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
         public static string Encode(byte[] bytes, PaddingPolicy padding = DefaultPaddingPolicy)
         {
             // Every 24 bits become 32 bits, including the trailing padding
@@ -87,6 +100,14 @@ namespace NeoSmart.Utils
 #endif
         }
 
+        /// <summary>
+        /// Decodes an input encoded in the url-safe base64 variant to its binary equivalent.
+        /// </summary>
+        /// <param name="input">The input to be decoded</param>
+        /// <returns>A newly allocated array containing the decoded binary result</returns>
+#if WITH_SPAN
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
         public static byte[] Decode(string encoded)
         {
 #if WITH_SPAN
@@ -125,8 +146,9 @@ namespace NeoSmart.Utils
 #if WITH_SPAN
         /// <summary>
         /// Encodes a binary <paramref name="input"/> to a URL-safe base64 representation, with a configurable
-        /// <see cref="PaddingPolicy"/>. To encode to bytes instead of a string, see <see cref="EncodeUtf8(ReadOnlySpan{byte}, PaddingPolicy)"/>
-        /// or the other <c>Encode()</c> overloads.
+        /// <see cref="PaddingPolicy"/>.<br/>
+        /// To encode to bytes instead of a string, see <see cref="EncodeUtf8(ReadOnlySpan{byte}, PaddingPolicy)"/>
+        /// or one of the other <c>Encode()</c> overloads.
         /// </summary>
         /// <param name="input">The raw, unencoded binary input to transform to base64</param>
         /// <param name="padding">The padding policy, which dictates whether trailing <c>=</c> bytes are
