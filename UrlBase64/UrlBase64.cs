@@ -128,6 +128,9 @@ namespace NeoSmart.Utils
 
         public static byte[] EncodeUtf8(ReadOnlySpan<byte> input, PaddingPolicy padding = DefaultPaddingPolicy)
         {
+            // Shadow the global static array with a ReadOnlySpan to help the compiler optimize things
+            ReadOnlySpan<byte> ToBase64 = UrlBase64.ToBase64.AsSpan();
+
             // Every three input bytes become 4 output bytes, and there are possibly two bytes of padding
             int maxLength = (input.Length + 2) / 3 * 4;
             Debug.Assert(maxLength == Base64.GetMaxEncodedToUtf8Length(input.Length));
@@ -140,11 +143,11 @@ namespace NeoSmart.Utils
             int j = 0;
             for (; i + 3 <= input.Length; i += 3)
             {
-                uint threeBytes = ((uint)(input[i] << 16)) | ((uint)(input[i + 1] << 8)) | input[i + 2];
-                uint fourBytes =
-                      (((uint)ToBase64[(threeBytes >> 0) & 0x3F]) << 24)
-                    | (((uint)ToBase64[(threeBytes >> 6) & 0x3F]) << 16)
-                    | (((uint)ToBase64[(threeBytes >> 12) & 0x3F]) << 8)
+                int threeBytes = input[i] << 16 | input[i + 1] << 8 | input[i + 2];
+                int fourBytes =
+                      (ToBase64[(threeBytes >> 0) & 0x3F] << 24)
+                    | (ToBase64[(threeBytes >> 6) & 0x3F] << 16)
+                    | (ToBase64[(threeBytes >> 12) & 0x3F] << 8)
                     | (ToBase64[threeBytes >> 18]);
                 utf8[j++] = (byte)fourBytes;
                 utf8[j++] = (byte)(fourBytes >> 8);
@@ -195,6 +198,9 @@ namespace NeoSmart.Utils
 
         public static byte[] Decode(ReadOnlySpan<char> input)
         {
+            // Shadow the global static array with a ReadOnlySpan to help the compiler optimize things
+            ReadOnlySpan<byte> FromBase64 = UrlBase64.FromBase64.AsSpan();
+
             // Simplify our calculations by always using unpadded UrlBase64 input:
             input = input.TrimEnd('=');
             int unpaddedLength = input.Length;
@@ -212,10 +218,10 @@ namespace NeoSmart.Utils
             for (; i + 4 <= input.Length; i += 4)
             {
                 // Every eight bits are actually six bits
-                uint bytes =
-                    (((uint)FromBase64[input[i]]) << 18) |
-                    (((uint)FromBase64[input[i + 1]]) << 12) |
-                    (((uint)FromBase64[input[i + 2]]) << 6) |
+                int bytes =
+                    (FromBase64[input[i]] << 18) |
+                    (FromBase64[input[i + 1]] << 12) |
+                    (FromBase64[input[i + 2]] << 6) |
                     (FromBase64[input[i + 3]]);
                 decoded[j++] = (byte)(bytes >> 16);
                 decoded[j++] = (byte)(bytes >> 8);
@@ -228,8 +234,8 @@ namespace NeoSmart.Utils
             {
                 var bytes = (input.Length - i) switch
                 {
-                    3 => (((uint)FromBase64[input[i]]) << 18) | (((uint)FromBase64[input[i + 1]]) << 12) | (((uint)FromBase64[input[i + 2]]) << 6) | 0xFF,
-                    2 => (((uint)FromBase64[input[i]]) << 18) | (((uint)FromBase64[input[i + 1]]) << 12) | (((uint)0xFF) << 6) | 0xFF,
+                    3 => (FromBase64[input[i]] << 18) | (FromBase64[input[i + 1]] << 12) | (FromBase64[input[i + 2]] << 6) | 0xFF,
+                    2 => (FromBase64[input[i]] << 18) | (FromBase64[input[i + 1]] << 12) | (0xFF << 6) | 0xFF,
                     _ => throw new InvalidOperationException($"Invalid input provided. {nameof(input)}.Length % 4 can never be less than 2, even without padding."),
                 };
 
