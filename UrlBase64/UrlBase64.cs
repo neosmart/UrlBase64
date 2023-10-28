@@ -2,6 +2,7 @@ using System;
 #if WITH_SPAN
 using System.Buffers.Text;
 using System.Diagnostics;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
 #else
@@ -184,7 +185,8 @@ namespace NeoSmart.Utils
 
         /// <summary>
         /// Encodes the provided binary input <paramref name="input"/> to URL-safe Base64, allocating the resulting
-        /// base64-encoded <see cref="Span{byte}"/> from the provided <paramref name="buffer"/>. <paramref name="buffer"/>
+        /// base64-encoded <see cref="Span{byte}"/> from the provided <paramref name="buffer"/> instead of allocating.<br/>
+        /// <paramref name="buffer"/>
         /// must be large enough to hold the encoded result; <see cref="GetMaxEncodedLength(int)"/> can be used to
         /// ensure a big enough buffer is used.
         /// </summary>
@@ -276,23 +278,72 @@ namespace NeoSmart.Utils
             Debug.Assert(j == base64.Length);
         }
 
-        public static byte[] Decode(ReadOnlySpan<char> input)
+        private static (int DecodedLength, int PaddingLength) CalculateDecodeLength(int trimmedInputLength)
         {
-            // Shadow the global static array with a ReadOnlySpan to help the compiler optimize things
-            ReadOnlySpan<byte> FromBase64 = UrlBase64.FromBase64.AsSpan();
-
-            // Simplify our calculations by always using unpadded UrlBase64 input:
-            input = input.TrimEnd('=');
-            int unpaddedLength = input.Length;
-            int paddingLength = ((4 - input.Length & 0b11) & 0b11);
-            Debug.Assert(paddingLength == (4 - input.Length % 4) % 4);
-            // Padding length *could* be 3 here, but that's actually an invalid input we'll throw on below
+            int unpaddedLength = trimmedInputLength;
+            int paddingLength = ((4 - unpaddedLength & 0b11) & 0b11);
+            Debug.Assert(paddingLength == (4 - unpaddedLength % 4) % 4);
+            // Padding length *could* be 3 here, but that's actually an invalid input we'll throw in the decode loop
             int paddedLength = unpaddedLength + paddingLength;
             int maxDecodedLength = ((paddedLength + 4 - 1) >> 2) * 3;
             Debug.Assert(maxDecodedLength == ((int)Math.Ceiling(paddedLength / 4.0)) * 3);
             Debug.Assert(Base64.GetMaxDecodedFromUtf8Length(paddedLength) == maxDecodedLength);
             int decodedLength = maxDecodedLength - paddingLength;
+            return (decodedLength, paddingLength);
+        }
+
+        /// <summary>
+        /// Decodes an input encoded in the url-safe base64 variant to its binary equivalent.
+        /// </summary>
+        /// <param name="input">The input to be decoded</param>
+        /// <returns>A newly allocated array containing the decoded binary result</returns>
+        public static byte[] Decode(ReadOnlySpan<char> input)
+        {
+            // Simplify our calculations by always using unpadded UrlBase64 input:
+            input = input.TrimEnd('=');
+            var (decodedLength, paddingLength) = CalculateDecodeLength(input.Length);
             var decoded = new byte[decodedLength];
+            var decodedSpan = DecodeInner(input, decoded, paddingLength);
+            Debug.Assert(decodedSpan.Length == decoded.Length);
+            return decoded;
+        }
+
+        /// <summary>
+        /// Decodes an input encoded in the url-safe base64 variant to its binary equivalent, without any
+        /// allocations. The result uses storage provided by the <paramref name="buffer"/> parameter.
+        /// </summary>
+        /// <param name="input">The input to be decoded</param>
+        /// <param name="buffer">The span to be used as the backing storage for the decoded result.<br/>
+        /// The result must not be read from this parameter; use the return value instead!</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentOutOfRangeException">The provided <paramref name="buffer"/> was
+        /// not large enough to contain the result.</exception>
+        public static Span<byte> Decode(ReadOnlySpan<char> input, Span<byte> buffer)
+        {
+            // Simplify our calculations by always using unpadded UrlBase64 input:
+            input = input.TrimEnd('=');
+            var (decodedLength, paddingLength) = CalculateDecodeLength(input.Length);
+            if (buffer.Length < decodedLength)
+            {
+                throw new ArgumentOutOfRangeException("Provided decode buffer is not large enough!", nameof(buffer));
+            }
+            var decoded = buffer.Slice(0, decodedLength);
+            return DecodeInner(input, decoded, paddingLength);
+        }
+
+        /// <summary>
+        /// The core decode loop. Makes assumptions about inputs!
+        /// </summary>
+        /// <param name="input">The input with all trailing <c>=</c> padding removed</param>
+        /// <param name="decoded">The output, sized to fit exactly</param>
+        /// <param name="paddingLength">The length of the padding that *would* have been present</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException">Invalid input was provided (truncated or padded)</exception>
+        public static Span<byte> DecodeInner(ReadOnlySpan<char> input, Span<byte> decoded, int paddingLength)
+        {
+            // Shadow the global static array with a ReadOnlySpan to help the compiler optimize things
+            ReadOnlySpan<byte> FromBase64 = UrlBase64.FromBase64.AsSpan();
+
             // Unrolled read of 4 characters
             int i = 0, j = 0;
             for (; i + 4 <= input.Length; i += 4)
@@ -306,7 +357,6 @@ namespace NeoSmart.Utils
                 decoded[j++] = (byte)(bytes >> 16);
                 decoded[j++] = (byte)(bytes >> 8);
                 decoded[j++] = (byte)(bytes);
-                Debug.Assert(j <= decodedLength);
             }
 
             // Handle left-over bits in case of input that should have had padding
@@ -334,10 +384,81 @@ namespace NeoSmart.Utils
                     decoded[j++] = (byte)(bytes >> 8);
                     decoded[j++] = (byte)(bytes >> 0);
                 }
-                Debug.Assert(j <= decodedLength);
             }
 
             return decoded;
+        }
+
+        // The following DecodeInner implementation is a bit-for-bit identical copy of the one above,
+        // but the parameter type has been changed from ReadOnlySpan<char> to ReadOnlySpan<byte>!
+        // The only way to avoid duplication would be to use .NET 6+ Generic Math support (this would
+        // limit the implementation to only .NET 6, which would be ok, but then we'd need to duplicate
+        // the code again anyway to provide a decode loop for lower .NET targets, so what's the point?)
+        // and require use to use int.CreateTruncating(...) instead of casting to (int) everywhere!
+
+        /// <summary>
+        /// The core decode loop. Makes assumptions about inputs!
+        /// </summary>
+        /// <param name="input">The input with all trailing <c>=</c> padding removed</param>
+        /// <param name="decoded">The output, sized to fit exactly</param>
+        /// <param name="paddingLength">The length of the padding that *would* have been present</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException">Invalid input was provided (truncated or padded)</exception>
+        public static Span<byte> DecodeInner(ReadOnlySpan<byte> input, Span<byte> decoded, int paddingLength)
+        {
+            // Shadow the global static array with a ReadOnlySpan to help the compiler optimize things
+            ReadOnlySpan<byte> FromBase64 = UrlBase64.FromBase64.AsSpan();
+
+            // Unrolled read of 4 characters
+            int i = 0, j = 0;
+            for (; i + 4 <= input.Length; i += 4)
+            {
+                // Every eight bits are actually six bits
+                int bytes =
+                    (FromBase64[input[i]] << 18) |
+                    (FromBase64[input[i + 1]] << 12) |
+                    (FromBase64[input[i + 2]] << 6) |
+                    (FromBase64[input[i + 3]]);
+                decoded[j++] = (byte)(bytes >> 16);
+                decoded[j++] = (byte)(bytes >> 8);
+                decoded[j++] = (byte)(bytes);
+            }
+
+            // Handle left-over bits in case of input that should have had padding
+            if (i < input.Length)
+            {
+                var bytes = (input.Length - i) switch
+                {
+                    3 => (FromBase64[input[i]] << 18) | (FromBase64[input[i + 1]] << 12) | (FromBase64[input[i + 2]] << 6) | 0xFF,
+                    2 => (FromBase64[input[i]] << 18) | (FromBase64[input[i + 1]] << 12) | (0xFF << 6) | 0xFF,
+                    _ => throw new InvalidOperationException($"Invalid input provided. {nameof(input)}.Length % 4 can never be less than 2, even without padding."),
+                };
+
+                if (paddingLength == 2)
+                {
+                    decoded[j++] = (byte)(bytes >> 16);
+                }
+                else if (paddingLength == 1)
+                {
+                    decoded[j++] = (byte)(bytes >> 16);
+                    decoded[j++] = (byte)(bytes >> 8);
+                }
+                else
+                {
+                    decoded[j++] = (byte)(bytes >> 16);
+                    decoded[j++] = (byte)(bytes >> 8);
+                    decoded[j++] = (byte)(bytes >> 0);
+                }
+            }
+
+            return decoded;
+        }
+
+        private static ReadOnlySpan<byte> TrimEnd(this ReadOnlySpan<byte> span, char trim)
+        {
+            int i = span.Length - 1;
+            for (; i >= 0 && span[i] == trim; --i) ;
+            return span.Slice(0, i + 1);
         }
 #endif
     }
