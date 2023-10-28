@@ -33,7 +33,8 @@ void UsageSample()
 
 The `UrlBase64` library comes with several variants of the `Encode()` and `Decode()` routines that can be used for better performance. In particular:
 
-* It is possible (and, assuming it works for you, preferable) to use `EncodeUtf8()` or one of the other `Encode()` variants that return an array of ASCII/UTF-8 bytes (being the URL-safe base64-encoded result) instead of a string,
+* It is possible (and, assuming it works for you, preferable) to use `EncodeUtf8()` or one of the other `Encode()` variants that return a span or array of ASCII/UTF-8 bytes (being the URL-safe base64-encoded result) instead of a string for better performance and lower memory usage.
+* Similarly, it is preferred to use the `Decode(byte[])` or `Decode(ReadOnlySpan<byte>)` overloads instead of `Decode(string)`.
 * There are overloads of both `Encode()` and `Decode()` which can complete in an allocation-free manner. These take a second `Span<byte> buffer` parameter that provides the scratch space to decode into and return a `Span<byte>` instead of a `byte[]` that represents the result of the encode or decode operation. This permits you to allocate a buffer once and reuse it for all subsequent calls (or use something like `ArrayPool<byte>`, etc) instead of having the `Encode()` or `Decode()` operation allocate a new buffer for the result each time.
 * To ensure you are passing in a buffer of sufficient size (otherwise the `Encode()` or `Decode()` operations will throw!), use `UrlBase64.GetMaxEncodedLength()` or `UrlBase64.GetMaxDecodedLength()` to obtain an adequately sized buffer to encode/decode into.
 
