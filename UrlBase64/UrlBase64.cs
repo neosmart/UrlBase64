@@ -2,6 +2,7 @@ using System;
 #if WITH_SPAN
 using System.Buffers.Text;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Text;
 #else
 using System.Collections.Generic;
@@ -121,22 +122,105 @@ namespace NeoSmart.Utils
         }
 
 #if WITH_SPAN
+        /// <summary>
+        /// Encodes a binary <paramref name="input"/> to a URL-safe base64 representation, with a configurable
+        /// <see cref="PaddingPolicy"/>. To encode to bytes instead of a string, see <see cref="EncodeUtf8(ReadOnlySpan{byte}, PaddingPolicy)"/>
+        /// or the other <c>Encode()</c> overloads.
+        /// </summary>
+        /// <param name="input">The raw, unencoded binary input to transform to base64</param>
+        /// <param name="padding">The padding policy, which dictates whether trailing <c>=</c> bytes are
+        /// appended to the output, defaulting to <see cref="PaddingPolicy.Discard"/> (i.e. not appended).</param>
+        /// <returns>An ASCII (UTF8-compatible) string being the URL-safe base64 representation of the provided <paramref name="input"/>.</returns>
         public static string Encode(ReadOnlySpan<byte> input, PaddingPolicy padding = DefaultPaddingPolicy)
         {
             return Encoding.ASCII.GetString(EncodeUtf8(input, padding));
         }
 
+        /// <summary>
+        /// Returns the maximum length of the base64-encoded representation of an input of length
+        /// <paramref name="inputLength"/>. This can be used to correctly size a buffer for use with
+        /// <see cref="Encode(ReadOnlySpan{byte}, Span{byte}, PaddingPolicy)"/>.
+        /// </summary>
+        /// <param name="inputLength">The length of the unencoded binary input</param>
+        /// <returns>The maximum length of the base64 equivalent of input of the provided length</returns>
+        /// <exception cref="ArgumentOutOfRangeException">The provided <paramref name="inputLength"/> exceeds the max supported size</exception>
+        public static int GetMaxEncodedLength(int inputLength)
+        {
+            long maxLength = (inputLength + 2) / 3 * 4;
+            if (maxLength > int.MaxValue)
+            {
+                throw new ArgumentOutOfRangeException(nameof(inputLength), "Encoded length exceeds supported limits!");
+            }
+            Debug.Assert(maxLength == Base64.GetMaxEncodedToUtf8Length(inputLength));
+            return (int)maxLength;
+        }
+
+        private static int GetEncodedLength(int inputLength, PaddingPolicy padding)
+        {
+            int paddingLength = (3 - (inputLength % 3)) % 3;
+            int maxLength = GetMaxEncodedLength(inputLength);
+            int length = (padding == PaddingPolicy.Preserve) ? maxLength : maxLength - paddingLength;
+            return length;
+        }
+
+        /// <summary>
+        /// Encodes the provided binary input <paramref name="input"/> to URL-safe Base64, returning the binary
+        /// result as a newly allocated <c>byte[]</c>. See <see cref="Encode(byte[], PaddingPolicy)"/> to get the
+        /// result as a string instead. (Getting the result as a <see cref="byte[]"/> performs better.)
+        /// </summary>
+        /// <param name="input">The binary input to be encoded</param>
+        /// <param name="padding">The <see cref="PaddingPolicy"/> to use, specifying whether trailing <c>=</c>
+        /// bytes will be appended to the output in some cases.</param>
+        /// <returns>A <see cref="byte[]"/> containing the base64-encoded result
+        /// <exception cref="ArgumentOutOfRangeException">The <paramref name="input"/> length exceeds the max supported size</exception>
         public static byte[] EncodeUtf8(ReadOnlySpan<byte> input, PaddingPolicy padding = DefaultPaddingPolicy)
+        {
+            // Every three input bytes become 4 output bytes, and there are possibly two bytes of padding
+            var length = GetEncodedLength(input.Length, padding);
+            var base64 = new byte[length];
+            InnerEncode(input, base64);
+            return base64;
+        }
+
+        /// <summary>
+        /// Encodes the provided binary input <paramref name="input"/> to URL-safe Base64, allocating the resulting
+        /// base64-encoded <see cref="Span{byte}"/> from the provided <paramref name="buffer"/>. <paramref name="buffer"/>
+        /// must be large enough to hold the encoded result; <see cref="GetMaxEncodedLength(int)"/> can be used to
+        /// ensure a big enough buffer is used.
+        /// </summary>
+        /// <param name="input">The binary input to be encoded</param>
+        /// <param name="buffer">The buffer to from which the base64-encoded result will be allocated. Do not
+        /// read the result from here - use the return value instead!</param>
+        /// <param name="padding">The <see cref="PaddingPolicy"/> to use, specifying whether trailing <c>=</c>
+        /// bytes will be appended to the output in some cases.</param>
+        /// <returns>A <see cref="Span{byte}"/> containing the base64-encoded result, allocated out of
+        /// the provided <paramref name="buffer"/>.</returns>
+        /// <exception cref="ArgumentException">The provided buffer is too small for the encoded result.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">The <paramref name="input"/> length exceeds the max supported size</exception>
+        public static Span<byte> Encode(ReadOnlySpan<byte> input, Span<byte> buffer, PaddingPolicy padding = DefaultPaddingPolicy)
+        {
+            // Every three input bytes become 4 output bytes, and there are possibly two bytes of padding
+            var length = GetEncodedLength(input.Length, padding);
+            if (buffer.Length < length)
+            {
+                throw new ArgumentException("Output buffer is not sufficiently long for encoded result!");
+            }
+            var base64 = buffer.Slice(0, length);
+            InnerEncode(input, base64);
+            return base64;
+        }
+
+        /// <summary>
+        /// Encodes directly from <paramref name="input"/> to <paramref name="base64"/>, assuming that
+        /// <paramref name="base64"/> is exactly sized to the required output length (accounting for the
+        /// padding policy).
+        /// </summary>
+        /// <param name="input"></param>
+        /// <param name="base64"></param>
+        public static void InnerEncode(ReadOnlySpan<byte> input, Span<byte> base64)
         {
             // Shadow the global static array with a ReadOnlySpan to help the compiler optimize things
             ReadOnlySpan<byte> ToBase64 = UrlBase64.ToBase64.AsSpan();
-
-            // Every three input bytes become 4 output bytes, and there are possibly two bytes of padding
-            int maxLength = (input.Length + 2) / 3 * 4;
-            Debug.Assert(maxLength == Base64.GetMaxEncodedToUtf8Length(input.Length));
-            int paddingLength = (3 - (input.Length % 3)) % 3;
-            int length = (padding == PaddingPolicy.Preserve) ? maxLength : maxLength - paddingLength;
-            var utf8 = new byte[length];
 
             // Read three bytes at a time, which give us four bytes of base64-encoded output
             int i = 0;
@@ -149,10 +233,10 @@ namespace NeoSmart.Utils
                     | (ToBase64[(threeBytes >> 6) & 0x3F] << 16)
                     | (ToBase64[(threeBytes >> 12) & 0x3F] << 8)
                     | (ToBase64[threeBytes >> 18]);
-                utf8[j++] = (byte)fourBytes;
-                utf8[j++] = (byte)(fourBytes >> 8);
-                utf8[j++] = (byte)(fourBytes >> 16);
-                utf8[j++] = (byte)(fourBytes >> 24);
+                base64[j++] = (byte)fourBytes;
+                base64[j++] = (byte)(fourBytes >> 8);
+                base64[j++] = (byte)(fourBytes >> 16);
+                base64[j++] = (byte)(fourBytes >> 24);
             }
 
             // Handle the remaining bytes not divisible by 3
@@ -167,33 +251,29 @@ namespace NeoSmart.Utils
                             var bytes = (ToBase64[(num >> 6) & 0x3F] << 16)
                                 | (ToBase64[(num >> 12) & 0x3F] << 8)
                                 | ToBase64[num >> 18];
-                            utf8[j++] = (byte)(bytes >> 0);
-                            utf8[j++] = (byte)(bytes >> 8);
-                            utf8[j++] = (byte)(bytes >> 16);
+                            base64[j++] = (byte)(bytes >> 0);
+                            base64[j++] = (byte)(bytes >> 8);
+                            base64[j++] = (byte)(bytes >> 16);
                             break;
                         }
                     case 1:
                         {
                             int oneByte = input[i++] << 8;
                             var bytes = (ToBase64[(oneByte >> 4) & 0x3F] << 8) | ToBase64[oneByte >> 10];
-                            utf8[j++] = (byte)bytes;
-                            utf8[j++] = (byte)(bytes >> 8);
+                            base64[j++] = (byte)bytes;
+                            base64[j++] = (byte)(bytes >> 8);
                             break;
                         }
                 }
 
                 // Add padding if necessary
-                if (padding == PaddingPolicy.Preserve)
+                while (j < base64.Length)
                 {
-                    for (int k = 0; k < paddingLength; k++)
-                    {
-                        utf8[j++] = (byte)'=';
-                    }
+                    base64[j++] = (byte)'=';
                 }
             }
             Debug.Assert(i == input.Length);
-
-            return utf8;
+            Debug.Assert(j == base64.Length);
         }
 
         public static byte[] Decode(ReadOnlySpan<char> input)
