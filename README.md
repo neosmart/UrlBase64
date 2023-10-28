@@ -10,7 +10,7 @@
 
 Or search for `UrlBase64` in the Visual Studio package manager.
 
-## Usage
+## Basic Usage
 
 All functions are contained in the static `UrlBase64` class, found in the `NeoSmart.Utils` namespace.
 
@@ -28,6 +28,14 @@ void UsageSample()
 	Assert.AreEqual("foo", bar);
 }
 ```
+
+## Advanced Usage
+
+The `UrlBase64` library comes with several variants of the `Encode()` and `Decode()` routines that can be used for better performance. In particular:
+
+* It is possible (and, assuming it works for you, preferable) to use `EncodeUtf8()` or one of the other `Encode()` variants that return an array of ASCII/UTF-8 bytes (being the URL-safe base64-encoded result) instead of a string,
+* There are overloads of both `Encode()` and `Decode()` which can complete in an allocation-free manner. These take a second `Span<byte> buffer` parameter that provides the scratch space to decode into and return a `Span<byte>` instead of a `byte[]` that represents the result of the encode or decode operation. This permits you to allocate a buffer once and reuse it for all subsequent calls (or use something like `ArrayPool<byte>`, etc) instead of having the `Encode()` or `Decode()` operation allocate a new buffer for the result each time.
+* To ensure you are passing in a buffer of sufficient size (otherwise the `Encode()` or `Decode()` operations will throw!), use `UrlBase64.GetMaxEncodedLength()` or `UrlBase64.GetMaxDecodedLength()` to obtain an adequately sized buffer to encode/decode into.
 
 ### Padding Options (Encoding)
 
@@ -49,9 +57,13 @@ Console.WriteLine(bytes, UrlBase64.Encode(bytes, PaddingPolicy.Discard));
 Console.WriteLine(bytes, UrlBase64.Encode(bytes, PaddingPolicy.Preserve));
 ```
 
+which emits the following:
+
 >TWFyeSBoYWQgYSBsaXR0bGUgbGFtYg
+
 >TWFyeSBoYWQgYSBsaXR0bGUgbGFtYg==
 
 ## License and Copyright
 
-`UrlBase64` is developed by Mahmoud Al-Qudsi of NeoSmart Technologies. `UrlBase64` is released under the terms of the MIT Public License. Copyright NeoSmart Technologies 2017-2018.
+`UrlBase64` is developed by Mahmoud Al-Qudsi of NeoSmart Technologies.
+`UrlBase64` is released under the terms of the MIT Public License. Copyright NeoSmart Technologies 2017-2023.
