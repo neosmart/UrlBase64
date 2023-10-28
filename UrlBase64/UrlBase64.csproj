@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard1.0;net20;net40;netstandard2.0</TargetFrameworks>
     <RootNamespace>NeoSmart.Utils</RootNamespace>
-    <Authors>Mahmoud Al-Qudsi, neosmart</Authors>
+    <Authors>Mahmoud Al-Qudsi, neosmart, mqudsi</Authors>
     <Company>NeoSmart Technologies</Company>
     <Description>A standards-compliant implementation of url-safe base64 encode/decode for .NET projects with Span optimizations.</Description>
     <Copyright>Copyright NeoSmart Technologies 2017-2023</Copyright>
@@ -16,26 +16,29 @@
     <PackageTags>url, web, base64, encoding, binary</PackageTags>
     <PackageReleaseNotes>
       <![CDATA[
-1.0:
-    * Support for Span<T> and co.
-0.1.2:
+2.0.0:
+    * Add support for allocation-free encode/decode
+    * Add new binary/UTF-8 Decode() method to decode url-safe base64-encoded bytes directly,
+      without going through a string representation.
 
+1.0.0:
+    * Support for Span<T> and co.
+
+0.1.2:
     * New PaddingPolicy option to specify output padding
     * Lower .NET Standard requirement to 1.0
 
 
 0.1.1:
-
     * Fixed an encoded error with inputs of a certain length.
 
 
 0.1:
-
     * Initial release
     ]]>
     </PackageReleaseNotes>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0.1</Version>
+    <Version>2.0.0-preview1</Version>
     <PackageIconUrl></PackageIconUrl>
     <PackageIcon>UrlBase64.png</PackageIcon>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
