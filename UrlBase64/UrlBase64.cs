@@ -2,7 +2,6 @@ using System;
 #if WITH_SPAN
 using System.Buffers.Text;
 using System.Diagnostics;
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
 #else
