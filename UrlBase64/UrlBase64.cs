@@ -309,6 +309,22 @@ namespace NeoSmart.Utils
         }
 
         /// <summary>
+        /// Decodes ASCII/UTF-8 binary input encoded in the url-safe base64 variant to its binary equivalent.
+        /// </summary>
+        /// <param name="input">The input to be decoded</param>
+        /// <returns>A newly allocated array containing the decoded binary result</returns>
+        public static byte[] Decode(ReadOnlySpan<byte> input)
+        {
+            // Simplify our calculations by always using unpadded UrlBase64 input:
+            input = input.TrimEnd('=');
+            var (decodedLength, paddingLength) = CalculateDecodeLength(input.Length);
+            var decoded = new byte[decodedLength];
+            var decodedSpan = DecodeInner(input, decoded, paddingLength);
+            Debug.Assert(decodedSpan.Length == decoded.Length);
+            return decoded;
+        }
+
+        /// <summary>
         /// Decodes an input encoded in the url-safe base64 variant to its binary equivalent, without any
         /// allocations. The result uses storage provided by the <paramref name="buffer"/> parameter.
         /// </summary>
@@ -319,6 +335,29 @@ namespace NeoSmart.Utils
         /// <exception cref="ArgumentOutOfRangeException">The provided <paramref name="buffer"/> was
         /// not large enough to contain the result.</exception>
         public static Span<byte> Decode(ReadOnlySpan<char> input, Span<byte> buffer)
+        {
+            // Simplify our calculations by always using unpadded UrlBase64 input:
+            input = input.TrimEnd('=');
+            var (decodedLength, paddingLength) = CalculateDecodeLength(input.Length);
+            if (buffer.Length < decodedLength)
+            {
+                throw new ArgumentOutOfRangeException("Provided decode buffer is not large enough!", nameof(buffer));
+            }
+            var decoded = buffer.Slice(0, decodedLength);
+            return DecodeInner(input, decoded, paddingLength);
+        }
+
+        /// <summary>
+        /// Decodes ASCII/UTF-8 binary input encoded in the url-safe base64 variant to its binary equivalent, without any
+        /// allocations. The result uses storage provided by the <paramref name="buffer"/> parameter.
+        /// </summary>
+        /// <param name="input">The input to be decoded</param>
+        /// <param name="buffer">The span to be used as the backing storage for the decoded result.<br/>
+        /// The result must not be read from this parameter; use the return value instead!</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentOutOfRangeException">The provided <paramref name="buffer"/> was
+        /// not large enough to contain the result.</exception>
+        public static Span<byte> Decode(ReadOnlySpan<byte> input, Span<byte> buffer)
         {
             // Simplify our calculations by always using unpadded UrlBase64 input:
             input = input.TrimEnd('=');

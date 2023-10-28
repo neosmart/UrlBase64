@@ -3,6 +3,8 @@ using System.Linq;
 using System.Text;
 using NeoSmart.Utils;
 using System;
+using System.Buffers.Text;
+using System.Buffers;
 
 namespace Tests
 {
@@ -106,6 +108,51 @@ namespace Tests
             }
         }
 
+        private static byte[] SystemEncodeUtf8(byte[] input)
+        {
+            var systemEncoded = new byte[Base64.GetMaxEncodedToUtf8Length(input.Length)];
+            var systemResult = Base64.EncodeToUtf8(input, systemEncoded, out var bytesConsumed, out var bytesWritten);
+            Assert.AreEqual(OperationStatus.Done, systemResult);
+            Assert.AreEqual(input.Length, bytesConsumed);
+            Assert.AreEqual(systemEncoded.Length, bytesWritten);
+            systemEncoded.AsSpan().Replace((byte)'+', (byte)'-').Replace((byte)'/', (byte)'_');
+            return systemEncoded;
+        }
+
+        [TestMethod]
+        public void Utf8VariableLengthTest()
+        {
+            // Use a fixed seed so we can have deterministic results
+            var rng = new Random(0);
+
+            for (int i = 0; i < 256; ++i)
+            {
+                var array = new byte[i];
+                rng.NextBytes(array);
+
+                try
+                {
+                    var encoded = UrlBase64.EncodeUtf8(array, PaddingPolicy.Discard);
+                    var systemEncoded = SystemEncodeUtf8(array).AsSpan().TrimEnd((byte)'=');
+                    Assert.IsTrue(systemEncoded.SequenceEqual(encoded));
+
+                    var decoded = UrlBase64.Decode(encoded);
+                    CollectionAssert.AreEqual(array, decoded, $"Decoded value mismatch for input of length {i}! ");
+
+                    systemEncoded = SystemEncodeUtf8(array);
+                    encoded = UrlBase64.EncodeUtf8(array, PaddingPolicy.Preserve);
+                    Assert.IsTrue(systemEncoded.SequenceEqual(encoded));
+
+                    decoded = UrlBase64.Decode(encoded);
+                    CollectionAssert.AreEqual(array, decoded, $"Decoded value mismatch for input of length {i}! ");
+                }
+                catch (FormatException ex)
+                {
+                    throw new Exception($"Decoded value mismatch for input of length {i}!", ex);
+                }
+            }
+        }
+
         [TestMethod]
         public void PaddingPolicyTest()
         {
@@ -122,6 +169,29 @@ namespace Tests
                 Assert.AreEqual(test.output.TrimEnd('='), UrlBase64.Encode(Encoding.UTF8.GetBytes(test.input)), "Found unexpected padding in encoded output!");
                 Assert.AreEqual(UrlBase64.Encode(Encoding.UTF8.GetBytes(test.input)), UrlBase64.Encode(Encoding.UTF8.GetBytes(test.input), DefaultPaddingPolicy), "Default padding policy behavior does not match expected!");
             }
+        }
+    }
+
+    static class SpanExtensions
+    {
+        public static Span<byte> Replace(this Span<byte> span, byte search, byte replace)
+        {
+            for (int i = 0; i < span.Length; ++i)
+            {
+                if (span[i] == search)
+                {
+                    span[i] = replace;
+                }
+            }
+
+            return span;
+        }
+
+        public static ReadOnlySpan<byte> TrimEnd(this ReadOnlySpan<byte> span, char trim)
+        {
+            int i = span.Length - 1;
+            for (; i >= 0 && span[i] == trim; --i) ;
+            return span.Slice(0, i + 1);
         }
     }
 }
