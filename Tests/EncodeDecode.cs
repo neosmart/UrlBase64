@@ -170,6 +170,23 @@ namespace Tests
                 Assert.AreEqual(UrlBase64.Encode(Encoding.UTF8.GetBytes(test.input)), UrlBase64.Encode(Encoding.UTF8.GetBytes(test.input), DefaultPaddingPolicy), "Default padding policy behavior does not match expected!");
             }
         }
+
+        [TestMethod]
+        // This is a regression test for issue #7: https://github.com/neosmart/UrlBase64/issues/7
+        public void DecodeNonUrlSafeBase64()
+        {
+            // Decoding regular base64 input with + instead of -
+            var input = "Q29udGFpbnMgYSBwbHVzIMOlw6bDn+KApuKIgsuaxpLiiIY=";
+            byte[] expected = [0x43, 0x6F, 0x6E, 0x74, 0x61, 0x69, 0x6E, 0x73, 0x20, 0x61, 0x20, 0x70, 0x6C, 0x75, 0x73, 0x20, 0xC3, 0xA5, 0xC3, 0xA6, 0xC3, 0x9F, 0xE2, 0x80, 0xA6, 0xE2, 0x88, 0x82, 0xCB, 0x9A, 0xC6, 0x92, 0xE2, 0x88, 0x86];
+            var actual = UrlBase64.Decode(input);
+            CollectionAssert.AreEqual(expected, actual, "Mismatch in comparison results!");
+
+            // Decoding regular base64 input with / instead of _
+            input = "Q29udGFpbnMgYSBzbGFzaCDDuOKImsucw5/iiILiiJrLmsOn4oiC4omkw58=";
+            expected = [0x43, 0x6F, 0x6E, 0x74, 0x61, 0x69, 0x6E, 0x73, 0x20, 0x61, 0x20, 0x73, 0x6C, 0x61, 0x73, 0x68, 0x20, 0xC3, 0xB8, 0xE2, 0x88, 0x9A, 0xCB, 0x9C, 0xC3, 0x9F, 0xE2, 0x88, 0x82, 0xE2, 0x88, 0x9A, 0xCB, 0x9A, 0xC3, 0xA7, 0xE2, 0x88, 0x82, 0xE2, 0x89, 0xA4, 0xC3, 0x9F];
+            actual = UrlBase64.Decode(input);
+            CollectionAssert.AreEqual(expected, actual, "Mismatch in comparison results!");
+        }
     }
 
     static class SpanExtensions
