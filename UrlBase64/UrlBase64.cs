@@ -428,7 +428,7 @@ namespace NeoSmart.Utils
         /// <param name="paddingLength">The length of the padding that *would* have been present</param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException">Invalid input was provided (truncated or padded)</exception>
-        public static Span<byte> DecodeInner(ReadOnlySpan<char> input, Span<byte> decoded, int paddingLength)
+        private static Span<byte> DecodeInner(ReadOnlySpan<char> input, Span<byte> decoded, int paddingLength)
         {
             // Shadow the global static array with a ReadOnlySpan to help the compiler optimize things
             ReadOnlySpan<byte> FromBase64 = UrlBase64.FromBase64.AsSpan();
