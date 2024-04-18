@@ -187,6 +187,17 @@ namespace Tests
             actual = UrlBase64.Decode(input);
             CollectionAssert.AreEqual(expected, actual, "Mismatch in comparison results!");
         }
+
+        [TestMethod]
+        public void DecodeInvalid()
+        {
+            // Make sure these throw...
+            Assert.ThrowsException<FormatException>(() => UrlBase64.Decode("invalid!"));
+            Assert.ThrowsException<FormatException>(() => UrlBase64.Decode("!!"));
+
+            // ...and this doesn't
+            UrlBase64.Decode(UrlBase64.Encode([0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]));
+        }
     }
 
     static class SpanExtensions
