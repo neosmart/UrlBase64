@@ -420,6 +420,13 @@ namespace NeoSmart.Utils
             return DecodeInner(input, decoded, paddingLength);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        static byte FromBase64Safe(int i)
+        {
+            var b = FromBase64.Span[i];
+            return b != 0xFF ? b : throw new FormatException("Invalid base64 input provided!");
+        }
+
         /// <summary>
         /// The core decode loop. Makes assumptions about inputs!
         /// </summary>
@@ -433,28 +440,37 @@ namespace NeoSmart.Utils
             // Shadow the global static array with a ReadOnlySpan to help the compiler optimize things
             ReadOnlySpan<byte> FromBase64 = UrlBase64.FromBase64.Span;
 
+            var invalid = false;
             // Unrolled read of 4 characters
             int i = 0, j = 0;
             for (; i + 4 <= input.Length; i += 4)
             {
                 // Every eight bits are actually six bits
-                int bytes =
-                    (FromBase64[input[i]] << 18) |
-                    (FromBase64[input[i + 1]] << 12) |
-                    (FromBase64[input[i + 2]] << 6) |
-                    (FromBase64[input[i + 3]]);
+                byte a = FromBase64[input[i]];
+                byte b = FromBase64[input[i + 1]];
+                byte c = FromBase64[input[i + 2]];
+                byte d = FromBase64[input[i + 3]];
+
+                invalid |= a == 0xff | b == 0xff | c == 0xff | d == 0xff;
+
+                int bytes = (a << 18) | (b << 12) | (c << 6) | (d);
                 decoded[j++] = (byte)(bytes >> 16);
                 decoded[j++] = (byte)(bytes >> 8);
                 decoded[j++] = (byte)(bytes);
             }
+
+            if (invalid)
+            {
+                throw new FormatException("Invalid base64 input provided");
+            };
 
             // Handle left-over bits in case of input that should have had padding
             if (i < input.Length)
             {
                 var bytes = (input.Length - i) switch
                 {
-                    3 => (FromBase64[input[i]] << 18) | (FromBase64[input[i + 1]] << 12) | (FromBase64[input[i + 2]] << 6) | 0xFF,
-                    2 => (FromBase64[input[i]] << 18) | (FromBase64[input[i + 1]] << 12) | (0xFF << 6) | 0xFF,
+                    3 => (FromBase64Safe(input[i]) << 18) | (FromBase64Safe(input[i + 1]) << 12) | (FromBase64Safe(input[i + 2]) << 6) | 0xFF,
+                    2 => (FromBase64Safe(input[i]) << 18) | (FromBase64Safe(input[i + 1]) << 12) | (0xFF << 6) | 0xFF,
                     _ => throw new InvalidOperationException($"Invalid input provided. {nameof(input)}.Length % 4 can never be less than 2, even without padding."),
                 };
 
@@ -493,33 +509,42 @@ namespace NeoSmart.Utils
         /// <param name="paddingLength">The length of the padding that *would* have been present</param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException">Invalid input was provided (truncated or padded)</exception>
-        public static Span<byte> DecodeInner(ReadOnlySpan<byte> input, Span<byte> decoded, int paddingLength)
+        private static Span<byte> DecodeInner(ReadOnlySpan<byte> input, Span<byte> decoded, int paddingLength)
         {
             // Shadow the global static array with a ReadOnlySpan to help the compiler optimize things
             ReadOnlySpan<byte> FromBase64 = UrlBase64.FromBase64.Span;
 
+            var invalid = false;
             // Unrolled read of 4 characters
             int i = 0, j = 0;
             for (; i + 4 <= input.Length; i += 4)
             {
                 // Every eight bits are actually six bits
-                int bytes =
-                    (FromBase64[input[i]] << 18) |
-                    (FromBase64[input[i + 1]] << 12) |
-                    (FromBase64[input[i + 2]] << 6) |
-                    (FromBase64[input[i + 3]]);
+                byte a = FromBase64[input[i]];
+                byte b = FromBase64[input[i + 1]];
+                byte c = FromBase64[input[i + 2]];
+                byte d = FromBase64[input[i + 3]];
+
+                invalid |= a == 0xff | b == 0xff | c == 0xff | d == 0xff;
+
+                int bytes = (a << 18) | (b << 12) | (c << 6) | (d);
                 decoded[j++] = (byte)(bytes >> 16);
                 decoded[j++] = (byte)(bytes >> 8);
                 decoded[j++] = (byte)(bytes);
             }
+
+            if (invalid)
+            {
+                throw new FormatException("Invalid base64 input provided");
+            };
 
             // Handle left-over bits in case of input that should have had padding
             if (i < input.Length)
             {
                 var bytes = (input.Length - i) switch
                 {
-                    3 => (FromBase64[input[i]] << 18) | (FromBase64[input[i + 1]] << 12) | (FromBase64[input[i + 2]] << 6) | 0xFF,
-                    2 => (FromBase64[input[i]] << 18) | (FromBase64[input[i + 1]] << 12) | (0xFF << 6) | 0xFF,
+                    3 => (FromBase64Safe(input[i]) << 18) | (FromBase64Safe(input[i + 1]) << 12) | (FromBase64Safe(input[i + 2]) << 6) | 0xFF,
+                    2 => (FromBase64Safe(input[i]) << 18) | (FromBase64Safe(input[i + 1]) << 12) | (0xFF << 6) | 0xFF,
                     _ => throw new InvalidOperationException($"Invalid input provided. {nameof(input)}.Length % 4 can never be less than 2, even without padding."),
                 };
 
