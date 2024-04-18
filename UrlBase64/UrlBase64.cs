@@ -17,7 +17,7 @@ namespace NeoSmart.Utils
 #if WITH_SPAN
         // Forward mapping from any of 64 binary values to their URL-safe Base64 equivalents.
         // In our dictionary, - takes the place of + and _ takes the place of /.
-        private readonly static byte[] ToBase64 = new byte[] {
+        private readonly static ReadOnlyMemory<byte> ToBase64 = new byte[] {
             (byte)'A', (byte)'B', (byte)'C', (byte)'D', (byte)'E', (byte)'F', (byte)'G', (byte)'H',
             (byte)'I', (byte)'J', (byte)'K', (byte)'L', (byte)'M', (byte)'N', (byte)'O', (byte)'P',
             (byte)'Q', (byte)'R', (byte)'S', (byte)'T', (byte)'U', (byte)'V', (byte)'W', (byte)'X',
@@ -29,7 +29,7 @@ namespace NeoSmart.Utils
         };
 
         // Reverse mapping of base64 alphabet to numerical value, such that table[(byte)'A'] = 0, ...
-        private readonly static byte[] FromBase64 = new byte[] {
+        private readonly static ReadOnlyMemory<byte> FromBase64 = new byte[] {
             0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
             0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
             0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
@@ -249,7 +249,7 @@ namespace NeoSmart.Utils
         public static void InnerEncode(ReadOnlySpan<byte> input, Span<byte> base64)
         {
             // Shadow the global static array with a ReadOnlySpan to help the compiler optimize things
-            ReadOnlySpan<byte> ToBase64 = UrlBase64.ToBase64.AsSpan();
+            ReadOnlySpan<byte> ToBase64 = UrlBase64.ToBase64.Span;
 
             // Read three bytes at a time, which give us four bytes of base64-encoded output
             int i = 0;
@@ -431,7 +431,7 @@ namespace NeoSmart.Utils
         private static Span<byte> DecodeInner(ReadOnlySpan<char> input, Span<byte> decoded, int paddingLength)
         {
             // Shadow the global static array with a ReadOnlySpan to help the compiler optimize things
-            ReadOnlySpan<byte> FromBase64 = UrlBase64.FromBase64.AsSpan();
+            ReadOnlySpan<byte> FromBase64 = UrlBase64.FromBase64.Span;
 
             // Unrolled read of 4 characters
             int i = 0, j = 0;
@@ -496,7 +496,7 @@ namespace NeoSmart.Utils
         public static Span<byte> DecodeInner(ReadOnlySpan<byte> input, Span<byte> decoded, int paddingLength)
         {
             // Shadow the global static array with a ReadOnlySpan to help the compiler optimize things
-            ReadOnlySpan<byte> FromBase64 = UrlBase64.FromBase64.AsSpan();
+            ReadOnlySpan<byte> FromBase64 = UrlBase64.FromBase64.Span;
 
             // Unrolled read of 4 characters
             int i = 0, j = 0;
