@@ -406,6 +406,7 @@ namespace NeoSmart.Utils
         /// <returns></returns>
         /// <exception cref="ArgumentOutOfRangeException">The provided <paramref name="buffer"/> was
         /// not large enough to contain the result.</exception>
+        /// <exception cref="FormatException">The provided input was not a valid Base64/UrlSafeBase64 value"</exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Span<byte> Decode(ReadOnlySpan<byte> input, Span<byte> buffer)
         {
@@ -434,7 +435,7 @@ namespace NeoSmart.Utils
         /// <param name="decoded">The output, sized to fit exactly</param>
         /// <param name="paddingLength">The length of the padding that *would* have been present</param>
         /// <returns></returns>
-        /// <exception cref="InvalidOperationException">Invalid input was provided (truncated or padded)</exception>
+        /// <exception cref="FormatException">The provided input was not a valid Base64/UrlSafeBase64 value"</exception>
         private static Span<byte> DecodeInner(ReadOnlySpan<char> input, Span<byte> decoded, int paddingLength)
         {
             // Shadow the global static array with a ReadOnlySpan to help the compiler optimize things
@@ -471,7 +472,7 @@ namespace NeoSmart.Utils
                 {
                     3 => (FromBase64Safe(input[i]) << 18) | (FromBase64Safe(input[i + 1]) << 12) | (FromBase64Safe(input[i + 2]) << 6) | 0xFF,
                     2 => (FromBase64Safe(input[i]) << 18) | (FromBase64Safe(input[i + 1]) << 12) | (0xFF << 6) | 0xFF,
-                    _ => throw new InvalidOperationException($"Invalid input provided. {nameof(input)}.Length % 4 can never be less than 2, even without padding."),
+                    _ => throw new FormatException($"Invalid input provided. {nameof(input)}.Length % 4 can never be less than 2, even without padding."),
                 };
 
                 if (paddingLength == 2)
@@ -509,6 +510,7 @@ namespace NeoSmart.Utils
         /// <param name="paddingLength">The length of the padding that *would* have been present</param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException">Invalid input was provided (truncated or padded)</exception>
+        /// <exception cref="FormatException">The provided input was not a valid Base64/UrlSafeBase64 value"</exception>
         private static Span<byte> DecodeInner(ReadOnlySpan<byte> input, Span<byte> decoded, int paddingLength)
         {
             // Shadow the global static array with a ReadOnlySpan to help the compiler optimize things
@@ -545,7 +547,7 @@ namespace NeoSmart.Utils
                 {
                     3 => (FromBase64Safe(input[i]) << 18) | (FromBase64Safe(input[i + 1]) << 12) | (FromBase64Safe(input[i + 2]) << 6) | 0xFF,
                     2 => (FromBase64Safe(input[i]) << 18) | (FromBase64Safe(input[i + 1]) << 12) | (0xFF << 6) | 0xFF,
-                    _ => throw new InvalidOperationException($"Invalid input provided. {nameof(input)}.Length % 4 can never be less than 2, even without padding."),
+                    _ => throw new FormatException($"Invalid input provided. {nameof(input)}.Length % 4 can never be less than 2, even without padding."),
                 };
 
                 if (paddingLength == 2)
