@@ -6,7 +6,7 @@
     <Authors>Mahmoud Al-Qudsi, neosmart, mqudsi</Authors>
     <Company>NeoSmart Technologies</Company>
     <Description>A standards-compliant implementation of url-safe base64 encode/decode for .NET projects with Span optimizations.</Description>
-    <Copyright>Copyright NeoSmart Technologies 2017-2023</Copyright>
+    <Copyright>Copyright NeoSmart Technologies 2017-2024</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/neosmart/UrlBase64/</PackageProjectUrl>
     <RepositoryUrl>https://github.com/neosmart/UrlBase64/</RepositoryUrl>
@@ -20,6 +20,7 @@
     * Add support for allocation-free encode/decode
     * Add new binary/UTF-8 Decode() method to decode url-safe base64-encoded bytes directly,
       without going through a string representation.
+    * Fix regression introduced in 1.x that breaks decoding REGULAR base64 with UrlBase64.Decode()
 
 1.0.0:
     * Support for Span<T> and co.
@@ -28,10 +29,8 @@
     * New PaddingPolicy option to specify output padding
     * Lower .NET Standard requirement to 1.0
 
-
 0.1.1:
-    * Fixed an encoded error with inputs of a certain length.
-
+    * Fixed an encode error with inputs of a certain length.
 
 0.1:
     * Initial release
