@@ -57,7 +57,7 @@
     </None>
   </ItemGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+  <PropertyGroup Condition="'$(TargetFramework)' != 'netstandard1.0' And '$(TargetFramework)' != 'net20' And '$(TargetFramework)' != 'net40'">
     <DefineConstants>$(DefineConstants);WITH_SPAN</DefineConstants>
   </PropertyGroup>
 

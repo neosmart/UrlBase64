@@ -13,22 +13,30 @@ jobs:
 
     strategy:
       matrix:
-        os: [ ubuntu-latest ]
-        dotnet: [ '6.0', '8.0' ]
+        os: [ windows-latest ]
+        dotnet: [
+          { version: '2', tfm: 'net20' },
+          { version: '4', tfm: 'net40' },
+          { version: '6', tfm: 'net6.0' },
+          { version: '8', tfm: 'net8.0' },
+      ]
 
     steps:
     - uses: actions/checkout@v4
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
+      if: ${{ startsWith(matrix.dotnet.tfm, 'net.') }} # only for .NET core
       id: stepid
       with:
-        dotnet-version: ${{ matrix.dotnet }}
-    # By default, tests will be executed under the latest installed version!
+        dotnet-version: ${{ matrix.dotnet.version }}
+      # By default, tests will be executed under the latest installed version!
     - name: Create temporary global.json
+      if: ${{ startsWith(matrix.dotnet.tfm, 'net.') }} # only for .NET core
       run: echo '{"sdk":{"version":"${{steps.stepid.outputs.dotnet-version}}"}}' > ./global.json
     - name: Restore packages
-      run: dotnet restore -p:TargetFrameworks="net${{ matrix.dotnet }}" -p:LangVersion="latest"
+      run: dotnet restore UrlBase64/UrlBase64.csproj --configuration Release -p:TargetFrameworks="${{ matrix.dotnet.tfm }}" -p:LangVersion="latest" --verbosity normal
     - name: Build solution
-      run: dotnet build --no-restore --configuration Release -p:TargetFrameworks="net${{ matrix.dotnet }}" -p:LangVersion="latest" --verbosity normal
+      run: dotnet build UrlBase64/UrlBase64.csproj --configuration Release -p:TargetFrameworks="${{ matrix.dotnet.tfm }}" -p:LangVersion="latest" --verbosity normal
     - name: Run tests
-      run: dotnet test --configuration Release --no-build --verbosity normal -p:TargetFrameworks="net${{ matrix.dotnet }}" -p:LangVersion="latest"
+      if: ${{ startsWith(matrix.dotnet.tfm, 'net.') }} # only for .NET core
+      run: dotnet test --configuration Release --no-build --verbosity normal -p:TargetFrameworks="${{ matrix.dotnet.tfm }}" -p:LangVersion="latest"
