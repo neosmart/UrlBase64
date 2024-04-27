@@ -13,7 +13,6 @@ jobs:
 
     strategy:
       matrix:
-        os: [ windows-latest ]
         dotnet: [
           { os: 'windows-latest', version: '2', tfm: 'net20' },
           { os: 'windows-latest', version: '4', tfm: 'net40' },
@@ -24,12 +23,12 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Setup .NET
+      if: endsWith(matrix.dotnet.tfm, '.0') # only for .NET core
+      # By default, tests will be executed under the latest installed version!
       uses: actions/setup-dotnet@v4
       id: stepid
       with:
         dotnet-version: ${{ matrix.dotnet.version }}
-      if: endsWith(matrix.dotnet.tfm, '.0') # only for .NET core
-      # By default, tests will be executed under the latest installed version!
     - name: Create temporary global.json
       if: endsWith(matrix.dotnet.tfm, '.0') # only for .NET core
       run: echo '{"sdk":{"version":"${{steps.stepid.outputs.dotnet-version}}"}}' > ./global.json
@@ -38,5 +37,6 @@ jobs:
     - name: Build solution
       run: dotnet build UrlBase64/UrlBase64.csproj -p:Configuration=Release -p:TargetFrameworks="${{ matrix.dotnet.tfm }}" -p:LangVersion="latest" --verbosity normal
     - name: Run tests
+      # if: matrix.dotnet.tfm == 'net8.0' # only for .NET 8 because we are using collection literals
+      if: endsWith(matrix.dotnet.tfm, '.0') # only for .NET core
       run: dotnet test -p:Configuration=Release --verbosity normal -p:TargetFrameworks="${{ matrix.dotnet.tfm }}" -p:LangVersion="latest"
-      if: matrix.dotnet.tfm == 'net8.0' # only for .NET 8 because we are using collection literals
