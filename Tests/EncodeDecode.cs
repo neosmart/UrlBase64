@@ -196,7 +196,7 @@ namespace Tests
             Assert.ThrowsException<FormatException>(() => UrlBase64.Decode("!!"));
 
             // ...and this doesn't
-            UrlBase64.Decode(UrlBase64.Encode([0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]));
+            UrlBase64.Decode(UrlBase64.Encode(new byte[] { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF }));
         }
     }
 
