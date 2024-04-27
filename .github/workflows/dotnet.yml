@@ -34,9 +34,9 @@ jobs:
       if: ${{ startsWith(matrix.dotnet.tfm, 'net.') }} # only for .NET core
       run: echo '{"sdk":{"version":"${{steps.stepid.outputs.dotnet-version}}"}}' > ./global.json
     - name: Restore packages
-      run: dotnet restore UrlBase64/UrlBase64.csproj --configuration Release -p:TargetFrameworks="${{ matrix.dotnet.tfm }}" -p:LangVersion="latest" --verbosity normal
+      run: dotnet restore UrlBase64/UrlBase64.csproj -p:Configuration=Release -p:TargetFrameworks="${{ matrix.dotnet.tfm }}" -p:LangVersion="latest" --verbosity normal
     - name: Build solution
-      run: dotnet build UrlBase64/UrlBase64.csproj --configuration Release -p:TargetFrameworks="${{ matrix.dotnet.tfm }}" -p:LangVersion="latest" --verbosity normal
+      run: dotnet build UrlBase64/UrlBase64.csproj -p:Configuration=Release -p:TargetFrameworks="${{ matrix.dotnet.tfm }}" -p:LangVersion="latest" --verbosity normal
     - name: Run tests
       if: ${{ startsWith(matrix.dotnet.tfm, 'net.') }} # only for .NET core
-      run: dotnet test --configuration Release --no-build --verbosity normal -p:TargetFrameworks="${{ matrix.dotnet.tfm }}" -p:LangVersion="latest"
+      run: dotnet test -p:Configuration=Release --no-build --verbosity normal -p:TargetFrameworks="${{ matrix.dotnet.tfm }}" -p:LangVersion="latest"
