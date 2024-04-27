@@ -25,18 +25,18 @@ jobs:
     - uses: actions/checkout@v4
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
-      if: contains(matrix.dotnet, 'net.') # only for .NET core
       id: stepid
       with:
         dotnet-version: ${{ matrix.dotnet.version }}
+      if: contains(matrix.dotnet, 'net.') # only for .NET core
       # By default, tests will be executed under the latest installed version!
     - name: Create temporary global.json
-      if: contains(matrix.dotnet, 'net.') # only for .NET core
+      if: matrix.net.tfm == '.net8.0' # only for .NET core
       run: echo '{"sdk":{"version":"${{steps.stepid.outputs.dotnet-version}}"}}' > ./global.json
     - name: Restore packages
       run: dotnet restore UrlBase64/UrlBase64.csproj -p:Configuration=Release -p:TargetFrameworks="${{ matrix.dotnet.tfm }}" -p:LangVersion="latest" --verbosity normal
     - name: Build solution
       run: dotnet build UrlBase64/UrlBase64.csproj -p:Configuration=Release -p:TargetFrameworks="${{ matrix.dotnet.tfm }}" -p:LangVersion="latest" --verbosity normal
     - name: Run tests
-      if: contains(matrix.dotnet, 'net.') # only for .NET core
       run: dotnet test -p:Configuration=Release --no-build --verbosity normal -p:TargetFrameworks="${{ matrix.dotnet.tfm }}" -p:LangVersion="latest"
+      if: contains(matrix.dotnet, 'net.') # only for .NET core
