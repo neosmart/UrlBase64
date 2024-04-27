@@ -28,10 +28,10 @@ jobs:
       id: stepid
       with:
         dotnet-version: ${{ matrix.dotnet.version }}
-      if: ${{ startsWith(matrix['dotnet']['tfm'], 'net.') }} # only for .NET core
+      if: endsWith(matrix['dotnet']['tfm'], '.0') # only for .NET core
       # By default, tests will be executed under the latest installed version!
     - name: Create temporary global.json
-      if: ${{ matrix.net.tfm == 'net8.0' }} # only for .NET core
+      if: endsWith(matrix['dotnet']['tfm'], '.0') # only for .NET core
       run: echo '{"sdk":{"version":"${{steps.stepid.outputs.dotnet-version}}"}}' > ./global.json
     - name: Restore packages
       run: dotnet restore UrlBase64/UrlBase64.csproj -p:Configuration=Release -p:TargetFrameworks="${{ matrix.dotnet.tfm }}" -p:LangVersion="latest" --verbosity normal
@@ -39,4 +39,4 @@ jobs:
       run: dotnet build UrlBase64/UrlBase64.csproj -p:Configuration=Release -p:TargetFrameworks="${{ matrix.dotnet.tfm }}" -p:LangVersion="latest" --verbosity normal
     - name: Run tests
       run: dotnet test -p:Configuration=Release --no-build --verbosity normal -p:TargetFrameworks="${{ matrix.dotnet.tfm }}" -p:LangVersion="latest"
-      if: startsWith(matrix.dotnet.tfm, 'net.') # only for .NET core
+      if: endsWith(matrix.dotnet.tfm, '.0') # only for .NET core
