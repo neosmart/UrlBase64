@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>netstandard1.0;net20;net40;netstandard2.0</TargetFrameworks>
@@ -57,7 +57,8 @@
     </None>
   </ItemGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)' != 'netstandard1.0' And '$(TargetFramework)' != 'net20' And '$(TargetFramework)' != 'net40'">
+  <!-- Under CI, TargetFramework is forced to net462 -->
+  <PropertyGroup Condition="'$(TargetFramework)' != 'netstandard1.0' And '$(TargetFramework)' != 'net20' And '$(TargetFramework)' != 'net40' And '$(TargetFramework)' != 'net462'">
     <DefineConstants>$(DefineConstants);WITH_SPAN</DefineConstants>
   </PropertyGroup>
 
