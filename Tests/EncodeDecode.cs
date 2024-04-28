@@ -3,7 +3,9 @@ using System.Linq;
 using System.Text;
 using NeoSmart.Utils;
 using System;
+#if NETCOREAPP
 using System.Buffers.Text;
+#endif
 using System.Buffers;
 
 namespace Tests
@@ -23,6 +25,29 @@ namespace Tests
             Assert.IsTrue(decoded.SequenceEqual(foo), "Decoded value mismatch!");
         }
 
+        [TestMethod]
+        public void DecodeFromArrayPadded1()
+        {
+            var encoding = new UTF8Encoding(false);
+            var foo = encoding.GetBytes("foo11");
+            var encoded = UrlBase64.Encode(foo, PaddingPolicy.Preserve);
+            Assert.AreEqual(Convert.ToBase64String(foo, Base64FormattingOptions.None).Replace('+', '-').Replace('/', '_'), encoded);
+            var decoded = UrlBase64.Decode(encoded);
+            CollectionAssert.AreEqual(foo, decoded);
+        }
+
+        [TestMethod]
+        public void DecodeFromArrayPadded2()
+        {
+            var encoding = new UTF8Encoding(false);
+            var foo = encoding.GetBytes("foo1");
+            var encoded = UrlBase64.Encode(foo, PaddingPolicy.Preserve);
+            Assert.AreEqual(Convert.ToBase64String(foo, Base64FormattingOptions.None).Replace('+', '-').Replace('/', '_'), encoded);
+            var decoded = UrlBase64.Decode(encoded);
+            CollectionAssert.AreEqual(foo, decoded.ToArray());
+        }
+
+#if NETCOREAPP
         [TestMethod]
         public void EncodeToSpan()
         {
@@ -75,6 +100,7 @@ namespace Tests
             var decoded = UrlBase64.Decode(encoded.AsSpan(0, encoded.Length - 1));
             CollectionAssert.AreEqual(foo, decoded.ToArray());
         }
+#endif
 
         [TestMethod]
         public void VariableLengthTest()
@@ -108,6 +134,7 @@ namespace Tests
             }
         }
 
+#if NETCOREAPP
         private static byte[] SystemEncodeUtf8(byte[] input)
         {
             var systemEncoded = new byte[UrlBase64.GetMaxEncodedLength(input.Length)];
@@ -152,6 +179,7 @@ namespace Tests
                 }
             }
         }
+#endif
 
         [TestMethod]
         public void PaddingPolicyTest()
@@ -220,6 +248,14 @@ namespace Tests
             int i = span.Length - 1;
             for (; i >= 0 && span[i] == trim; --i) ;
             return span.Slice(0, i + 1);
+        }
+
+        public static byte[] TrimEnd(this byte[] array, char trim)
+        {
+            int i = array.Length - 1;
+            for (; i >= 0 && array[i] == trim; --i) ;
+            Array.Resize(ref array, i + 1);
+            return array;
         }
     }
 }
