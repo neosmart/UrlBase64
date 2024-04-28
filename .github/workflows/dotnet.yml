@@ -16,8 +16,8 @@ jobs:
         dotnet: [
           { os: 'windows', version: '2', tfm: 'net20' },
           { os: 'windows', version: '4', tfm: 'net462' },
-          { os: 'ubuntu',  version: '3', tfm: 'net3.1' },
-          { os: 'ubuntu',  version: '8', tfm: 'net8.0' },
+          { os: 'ubuntu', version: '3.1', tfm: 'netcoreapp3.1' },
+          { os: 'ubuntu', version: '8', tfm: 'net8.0' },
       ]
 
     steps:
