@@ -37,5 +37,5 @@ jobs:
     - name: Build solution
       run: dotnet build UrlBase64/UrlBase64.csproj -p:Configuration=Release -p:TargetFrameworks="${{ matrix.dotnet.tfm }}" -p:LangVersion="latest" --verbosity normal
     - name: Run tests
-      if: ${{ ! matrix.dotnet.tfm == 'net20' }}
+      if: matrix.dotnet.tfm != 'net20'
       run: dotnet test -p:Configuration=Release --verbosity normal -p:TargetFrameworks="${{ matrix.dotnet.tfm }}" -p:LangVersion="latest"
