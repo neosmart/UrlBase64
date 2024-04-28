@@ -1,6 +1,7 @@
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 using NeoSmart.Utils;
+using System.IO;
 using System.Text;
 
 namespace Benchmark
