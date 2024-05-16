@@ -67,4 +67,4 @@ which emits the following:
 ## License and Copyright
 
 `UrlBase64` is developed by Mahmoud Al-Qudsi of NeoSmart Technologies.
-`UrlBase64` is released under the terms of the MIT Public License. Copyright NeoSmart Technologies 2017-2023.
+`UrlBase64` is released under the terms of the MIT Public License. Copyright NeoSmart Technologies 2017-2024.
