@@ -15,6 +15,8 @@ namespace NeoSmart.Utils
         private const PaddingPolicy DefaultPaddingPolicy = PaddingPolicy.Discard;
 
 #if WITH_SPAN
+        // 64-byte LUT, takes only one L1 cache line. Extremely efficient. See https://specbranch.com/posts/lookup-tables/
+        //
         // Forward mapping from any of 64 binary values to their URL-safe Base64 equivalents.
         // In our dictionary, - takes the place of + and _ takes the place of /.
         private readonly static ReadOnlyMemory<byte> ToBase64 = new byte[] {
@@ -28,6 +30,10 @@ namespace NeoSmart.Utils
             (byte)'4', (byte)'5', (byte)'6', (byte)'7', (byte)'8', (byte)'9', (byte)'-', (byte)'_'
         };
 
+        // 256-byte (4 cache line) lookup table, but not accessed uniformly - 3rd and 4th cache lines
+        // for invalid chars only and most values are in second - so it should still perform well and
+        // remain hot in L1.
+        //
         // Reverse mapping of base64 alphabet to numerical value, such that table[(byte)'A'] = 0, ...
         private readonly static ReadOnlyMemory<byte> FromBase64 = new byte[] {
             0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
